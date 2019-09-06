@@ -12,6 +12,29 @@
 
 (conman/bind-connection *db* "sql/queries.sql")
 
+(defn run-effects!
+  "Runs a bunch of functions inside a transaction.
+  `funs` must be a sequence of (fun & args).
+  Returns the value of the last applied fun."
+  [[fun & args] & funs-args]
+  (let [result (atom nil)]
+    (conman/with-transaction [*db*]
+      (reset! result (apply fun args))
+      (doseq [[fun* & args*] funs-args]
+        (reset! result (apply fun* args*))))
+    @result))
+
+(defmacro with-rollback
+  "Runs body inside a transaction to be rollbacked."
+  [& body]
+  `(conman/with-transaction [*db*]
+     (jdbc/db-set-rollback-only! *db*)
+     ~@body))
+
+(defn get-id-from-insert
+  "Returns the last inserted id from an sqlite insert."
+  [x]
+  (get x (keyword "last_insert_rowid()")))
 
 (extend-protocol jdbc/IResultSetReadColumn
   java.sql.Timestamp
