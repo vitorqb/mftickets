@@ -1,0 +1,6 @@
+CREATE TABLE userLoginTokens
+(id INTEGER PRIMARY KEY,
+ userId INTEGER NOT NULL,
+ value VARCHAR(200) NOT NULL,
+ createdAt TEXT NOT NULL,
+ hasBeenInvalidated BOOLEAN DEFAULT FALSE);
