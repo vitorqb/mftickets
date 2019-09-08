@@ -30,7 +30,9 @@
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [selmer "1.12.14"]]
+                 [selmer "1.12.14"]
+                 [clj-http "3.10.0"]
+                 [clojure.java-time "0.3.2"]]
 
   :min-lein-version "2.0.0"
   

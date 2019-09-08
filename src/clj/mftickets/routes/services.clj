@@ -9,6 +9,7 @@
     [reitit.ring.middleware.parameters :as parameters]
     [mftickets.middleware.formats :as formats]
     [mftickets.middleware.exception :as exception]
+    [mftickets.routes.services.login :as routes.services.login]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]))
 
@@ -46,6 +47,8 @@
      {:get (swagger-ui/create-swagger-ui-handler
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
+
+   (into ["/login" {}] routes.services.login/routes)
 
    ["/ping"
     {:get (constantly (ok {:message "pong"}))}]
