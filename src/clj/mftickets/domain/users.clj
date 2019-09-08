@@ -3,9 +3,14 @@
    [mftickets.db.users :as db.users]))
 
 (defn get-user
-  "Retrieves an user from the db."
+  "Retrieves an user from the db by email."
   [params]
   (db.users/get-user params))
+
+(defn get-user-by-id
+  "Retrieves an user from the db by id."
+  [params]
+  (db.users/get-user-by-id params))
 
 (defn create-user!
   "Creates an user in the database."

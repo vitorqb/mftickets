@@ -35,3 +35,10 @@ SELECT EXISTS
  AND value = :value
 ) AS response
 FROM userLoginKeys
+
+-- :name get-user-id-from-token-value* :result :1
+-- :doc Retrieves the user-id given a token value.
+SELECT userId
+FROM userLoginTokens
+WHERE value = :token-value
+AND hasBeenInvalidated is FALSE

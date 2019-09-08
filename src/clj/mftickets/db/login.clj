@@ -36,6 +36,11 @@
           (update :has-been-invalidated #(not (= 0 %)))
           (utils.transform/remapkey :userid :user-id )))
 
+(defn get-user-id-from-token-value
+  "Retrieves the user-id given a token value, or nil if there is not valid token."
+  [token-value]
+  (some-> {:token-value token-value} get-user-id-from-token-value* :userid))
+
 (defn create-user-token!
   "Creates and returns a token for an user."
   [user-token]

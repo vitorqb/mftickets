@@ -9,7 +9,9 @@
     [reitit.ring.middleware.parameters :as parameters]
     [mftickets.middleware.formats :as formats]
     [mftickets.middleware.exception :as exception]
+    [mftickets.middleware.auth :as middleware.auth]
     [mftickets.routes.services.login :as routes.services.login]
+    [mftickets.routes.services.helpers :as routes.services.helpers]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]))
 
@@ -51,7 +53,9 @@
    (into ["/login" {}] routes.services.login/routes)
 
    ["/ping"
-    {:get (constantly (ok {:message "pong"}))}]
+    {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+     :parameters {:header {:authorization string?}}
+     :get (constantly (ok {:message "pong"}))}]
    
 
    ["/math"
