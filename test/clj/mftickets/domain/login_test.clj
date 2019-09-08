@@ -3,7 +3,8 @@
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
             [mftickets.db.core :as db.core]
             [mftickets.db.login :as db.login]
-            [mftickets.utils.emails :as utils.emails]))
+            [mftickets.utils.emails :as utils.emails]
+            [mftickets.test-utils :as test-utils]))
 
 (deftest test-generate-random-key-value
   (with-redefs [rand-nth (constantly 1)]
@@ -60,3 +61,15 @@
               [_ [fn & args] & _] effects]
           (is (= fn db.login/create-user-token!))
           (is (= args [{:user-id 999 :value "bar"}])))))))
+
+(deftest test-get-user-from-token-value
+
+  (testing "Valid token"
+    (test-utils/with-db
+      (let [user-key (sut/create-user-key! {:user-id 1 :value "foo"})]
+        (sut/create-user-token! {:user-key user-key :token-value "bar"})
+        (is (= 1 (sut/get-user-id-from-token-value "bar"))))))
+
+  (testing "Unexistant token"
+    (test-utils/with-db
+      (is (nil? (sut/get-user-id-from-token-value "foo"))))))

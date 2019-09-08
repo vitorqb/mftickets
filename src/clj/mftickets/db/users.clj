@@ -12,3 +12,7 @@
 (defn create-user!
   [params]
   (create-user!* params))
+
+(defn get-user-by-id
+  [params]
+  (get-user-by-id* params))
