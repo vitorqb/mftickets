@@ -32,7 +32,8 @@
                  [ring/ring-defaults "0.3.2"]
                  [selmer "1.12.14"]
                  [clj-http "3.10.0"]
-                 [clojure.java-time "0.3.2"]]
+                 [clojure.java-time "0.3.2"]
+                 [org.clojure/core.match "0.3.0"]]
 
   :min-lein-version "2.0.0"
   

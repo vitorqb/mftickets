@@ -36,3 +36,27 @@
             text-body (sut/send-key-email-text-body (:value user-key))]
         (is (= {:email email :text-body text-body}
                (sut/send-key! {:email email :user-key user-key})))))))
+
+(deftest test-create-user-token!
+  (with-redefs [db.core/run-effects! (fn [& xs] xs)]
+
+    (testing "Returns invalid user key if key is not found or invalid"
+      (with-redefs [sut/is-valid-user-key? (constantly false)]
+        (is (= ::sut/invalid-user-key
+               (sut/create-user-token! {:user-key {:user-id 999 :value "foo"}})))))
+
+    (testing "Calls invalidate-user-keys!"
+      (with-redefs [sut/is-valid-user-key? (constantly true)]
+        (let [user-key {:user-id 999 :value "foo"}
+              effects (sut/create-user-token! {:user-key user-key})
+              [[fn & args] & _] effects]
+          (is (= fn db.login/invalidate-user-keys!))
+          (is (= args [{:user-id 999}])))))
+
+    (testing "Calls db create-user-token!"
+      (with-redefs [sut/is-valid-user-key? (constantly true)]
+        (let [user-key {:user-id 999 :value "foo"}
+              effects (sut/create-user-token! {:user-key user-key :token-value "bar"})
+              [_ [fn & args] & _] effects]
+          (is (= fn db.login/create-user-token!))
+          (is (= args [{:user-id 999 :value "bar"}])))))))
