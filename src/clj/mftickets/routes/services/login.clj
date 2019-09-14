@@ -21,7 +21,7 @@
   (http-response/no-content))
 
 (defn- handle-get-token
-  "Handler for getting a tokey for an user."
+  "Handler for getting a token for an user."
   [{{{:keys [email keyValue]} :body} :parameters}]
   (if-let-user [user (domain.users/get-user {:email email})]
     (let [given-user-key {:user-id (:id user) :value keyValue}
@@ -34,7 +34,16 @@
         (invalid-key-bad-request)
         
         token
-        (http-response/ok {:token (:value token)})))))
+        (-> (http-response/ok)
+            (assoc :body    {:token (:value token)})
+            (assoc :session {:token (:value token)}))))))
+
+(defn- handle-get-token-from-cookie
+  "Handler for getting a token based on session cookie."
+  [{{token-value :token} :session}]
+  (if (some-> token-value domain.login/is-valid-token-value?)
+    {:body {:token {:value token-value}}}
+    {:body nil}))
 
 (def routes
   [["/send-key"
@@ -43,7 +52,10 @@
             :responses {204 {}}
             :handler handle-send-user-key}}]
    ["/get-token"
-    {:post {:summary "returns a token given an user key and an email"
+    {:get  {:summary "returns a token from browser cookies."
+            :response {200 (constantly true)}
+            :handler handle-get-token-from-cookie}
+     :post {:summary "returns a token given an user key and an email"
             :parameters {:body {:email string? :keyValue string?}}
             :responses {200 {:token {:value string?}}
                         400 {:message string?}}

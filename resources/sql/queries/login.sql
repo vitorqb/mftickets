@@ -42,3 +42,12 @@ SELECT userId
 FROM userLoginTokens
 WHERE value = :token-value
 AND hasBeenInvalidated is FALSE
+
+-- :name is-valid-token-value?* :result :1
+-- :doc Exists query for whether a token value is valid.
+SELECT EXISTS
+(SELECT * FROM userLoginTokens
+ WHERE value = :value
+ AND hasBeenInvalidated IS FALSE
+) AS response
+FROM userLoginTokens
