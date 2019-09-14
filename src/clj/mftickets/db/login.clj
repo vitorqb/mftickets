@@ -50,6 +50,10 @@
       (db.core/get-id-from-insert)
       get-user-token))
 
+(defn is-valid-token-value?
+  [token-value]
+  (some-> {:value token-value} is-valid-token-value?* :response zero? not))
+
 (defn is-valid-user-key?
   "Returns a boolean (true or nil) indicating if a given user-key is valid."
   [user-key]

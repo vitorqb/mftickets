@@ -62,6 +62,11 @@
           (is (= fn db.login/create-user-token!))
           (is (= args [{:user-id 999 :value "bar"}])))))))
 
+(deftest test-is-valid-token-value?
+  (testing "Calls db fn"
+    (with-redefs [db.login/is-valid-token-value? identity]
+      (is (= ::foo (sut/is-valid-token-value? ::foo))))))
+
 (deftest test-get-user-from-token-value
 
   (testing "Valid token"

@@ -1,6 +1,7 @@
 (ns mftickets.db.login-test
   (:require [mftickets.db.login :as sut]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
+            [clojure.java.jdbc :as jdbc]
             [mftickets.utils.date-time :as utils.date-time]
             [mftickets.db.core :as db.core]
             [mftickets.test-utils :as test-utils]))
@@ -41,3 +42,26 @@
   (testing "False"
     (test-utils/with-db
       (is (nil? (sut/is-valid-user-key? {:value "bar" :user-id 1}))))))
+
+(deftest test-is-valid-token-value?
+
+  (testing "When token does not exists"
+    (test-utils/with-db
+      (is (= nil (sut/is-valid-token-value? "foo")))))
+
+  (let [value "foo"
+        raw-token {:id 1
+                   :userId 1
+                   :value value
+                   :createdAt "2019-01-01T12:12:12"
+                   :hasBeenInvalidated true}]
+
+    (testing "When token has expired"
+      (test-utils/with-db
+        (jdbc/insert! db.core/*db* :userLoginTokens raw-token)
+        (is (= false (sut/is-valid-token-value? value)))))
+
+    (testing "When token exists and is valid"
+      (test-utils/with-db
+        (jdbc/insert! db.core/*db* :userLoginTokens (assoc raw-token :hasBeenInvalidated false))
+        (is (= true (sut/is-valid-token-value? value)))))))

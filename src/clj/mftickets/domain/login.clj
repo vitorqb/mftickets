@@ -60,6 +60,11 @@
        [db.login/invalidate-user-keys! {:user-id user-id}]
        [db.login/create-user-token! {:user-id user-id :value token-value}]))))
 
+(defn is-valid-token-value?
+  "Returns a boolean indicating if a given token value is valid"
+  [token-value]
+  (db.login/is-valid-token-value? token-value))
+
 (defn get-user-id-from-token-value
   "Retrieves the user-id given a token value, or nil if there is not valid token."
   [token-value]
