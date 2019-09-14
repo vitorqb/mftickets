@@ -26,13 +26,20 @@
   (let [handle-get-token #'sut/handle-get-token
         invalid-key-bad-request #'sut/invalid-key-bad-request]
 
-    (testing "Returns created token if valid user and key."
+    (testing "Valid user and key..."
       (with-redefs [domain.users/get-user (constantly {:user-id 999})
                     domain.login/create-user-token! (constantly {:value ::token})]
         (let [request {:parameters {:body {:email "foo" :keyValue "bar"}}}
               response (handle-get-token request)]
-          (is (= (http-response/ok {:token ::token})
-                 response)))))
+
+          (testing "Returns created token in body."
+            (is (= {:token ::token} (:body response))))
+
+          (testing "Returns 200"
+            (is (= 200 (:status response))))
+
+          (testing "Returns session with token"
+            (is (= {:token ::token} (:session response)))))))
 
     (testing "Returns invalid key if invalid keys"
       (with-redefs [domain.users/get-user (constantly {:user-id 999})
@@ -45,3 +52,23 @@
       (with-redefs [domain.users/get-user (constantly nil)]
         (is (= (services.helpers/unknown-user-bad-request)
                (handle-get-token {:parameters {:body {:email "foo" :keyValue "bar"}}})))))))
+
+(deftest test-handle-get-token-from-cookie
+  (let [handle-get-token-from-cookie #'sut/handle-get-token-from-cookie]
+
+    (let [request {:session {:token "foo"}}]
+
+      (testing "When token exists and is valid, returns it."
+        (with-redefs [domain.login/is-valid-token-value? (constantly true)]
+          (is (= {:body {:token {:value "foo"}}}
+                 (handle-get-token-from-cookie request)))))
+
+      (testing "When token exists but is not valid, returns nil"
+        (with-redefs [domain.login/is-valid-token-value? (constantly false)]
+          (is (= {:body nil}
+                 (handle-get-token-from-cookie request))))))
+
+    (testing "When token does not exist, returns nil"
+      (let [request {:session {}}]
+        (is (= {:body nil}
+               (handle-get-token-from-cookie request)))))))
