@@ -6,7 +6,8 @@
     [expound.alpha :as expound]
     [mount.core :as mount]
     [mftickets.core :refer [start-app]]
-    [mftickets.db.core]
+    [mftickets.db.core :as db.core]
+    [mftickets.db.prefill :as db.prefill]
     [conman.core :as conman]
     [luminus-migrations.core :as migrations]))
 
@@ -59,4 +60,7 @@
   [name]
   (migrations/create name (select-keys env [:database-url])))
 
-
+(defn run-prefills!
+  "Runs all prefills from mftickets.db.prefill"
+  []
+  (db.prefill/run-prefills! db.core/*db*))
