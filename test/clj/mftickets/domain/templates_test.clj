@@ -9,8 +9,7 @@
 
   (testing "Base"
     (test-utils/with-db
-      (jdbc/insert!
-       db.core/*db*
+      (test-utils/insert!
        :templates
        {:id 1 :projectId 1 :name "Foo" :creationDate "2019-09-14T19:08:45"})
       (is (= {:id 1

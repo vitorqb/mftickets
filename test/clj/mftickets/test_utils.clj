@@ -37,7 +37,6 @@
   [r]
   (muuntaja/decode-response-body r))
 
-;; !!!! TODO -> Use this everywhere
 (defn insert!
   "Wrapper around jdbc insert!"
   [table params]

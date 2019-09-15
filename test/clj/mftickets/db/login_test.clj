@@ -58,10 +58,10 @@
 
     (testing "When token has expired"
       (test-utils/with-db
-        (jdbc/insert! db.core/*db* :userLoginTokens raw-token)
+        (test-utils/insert! :userLoginTokens raw-token)
         (is (= false (sut/is-valid-token-value? value)))))
 
     (testing "When token exists and is valid"
       (test-utils/with-db
-        (jdbc/insert! db.core/*db* :userLoginTokens (assoc raw-token :hasBeenInvalidated false))
+        (test-utils/insert! :userLoginTokens (assoc raw-token :hasBeenInvalidated false))
         (is (= true (sut/is-valid-token-value? value)))))))
