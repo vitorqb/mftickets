@@ -2,7 +2,8 @@
   (:require
    [mftickets.domain.templates :as domain.templates]
    [mftickets.domain.templates.sections :as domain.templates.sections]
-   [mftickets.domain.templates.properties :as domain.templates.properties]))
+   [mftickets.domain.templates.properties :as domain.templates.properties]
+   [com.rpl.specter :as specter]))
 
 (defn- assoc-sections
   "Assocs `:sections` for a template."
@@ -12,18 +13,11 @@
 
 (defn- assoc-property-to-sections
   "Assocs a single property to it's section in a list of sections."
-  [{:keys [template-section-id] :as property} [section & sections]]
-  (loop [section* section todo sections done []]
-    (cond
-      (nil? section*)
-      done
-
-      (= template-section-id (:id section*))
-      (let [new-section (update section* :properties conj property)]
-        (concat done [new-section] todo))
-
-      :else
-      (recur (first todo) (next todo) (conj done section*)))))
+  [{:keys [template-section-id] :as property} sections]
+  (specter/transform
+   [(specter/filterer :id #(= % template-section-id)) specter/FIRST :properties]
+   #(conj % property)
+   sections))
 
 (defn- assoc-property-to-template
   "Assocs a single property to a template, inside it's correct section."
