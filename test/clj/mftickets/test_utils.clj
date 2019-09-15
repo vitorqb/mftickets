@@ -5,7 +5,8 @@
    [mount.core :as mount]
    [mftickets.config :as config]
    [luminus-migrations.core :as migrations]
-   [muuntaja.core :as muuntaja]))
+   [muuntaja.core :as muuntaja]
+   [clojure.java.jdbc :as jdbc]))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -35,3 +36,9 @@
   "Parses and returns the body of a request"
   [r]
   (muuntaja/decode-response-body r))
+
+;; !!!! TODO -> Use this everywhere
+(defn insert!
+  "Wrapper around jdbc insert!"
+  [table params]
+  (jdbc/insert! db.core/*db* table params))
