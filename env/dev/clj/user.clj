@@ -6,11 +6,10 @@
     [expound.alpha :as expound]
     [mount.core :as mount]
     [mftickets.core :refer [start-app]]
-    [mftickets.db.core]
+    [mftickets.db.core :as db.core]
     [mftickets.db.prefill :as db.prefill]
     [conman.core :as conman]
-    [luminus-migrations.core :as migrations]
-    [clojure.java.jdbc :as jdbc]))
+    [luminus-migrations.core :as migrations]))
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
@@ -62,12 +61,6 @@
   (migrations/create name (select-keys env [:database-url])))
 
 (defn run-prefills!
-  "Runs all prefill registered."
+  "Runs all prefills from mftickets.db.prefill"
   []
-  (jdbc/with-db-transaction [tra mftickets.db.core/*db*]
-    (let [prefills (db.prefill/prefill-effects {:db tra})]
-      (doseq [[key prefill] prefills]
-        (println "Running prefill " key)
-        (doseq [[fn & args] prefill]
-          (clojure.pprint/pprint (drop 1 args))
-          (apply fn args))))))
+  (db.prefill/run-prefills! db.core/*db*))

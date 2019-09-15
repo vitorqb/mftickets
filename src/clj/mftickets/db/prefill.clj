@@ -26,3 +26,14 @@
   "Returns a map of prefill effects, that can be run using db.core/run!"
   [{:keys [db] :as opts}]
   {:example-template (parse-args db.prefill.example-template/example-template-prefill opts)})
+
+(defn run-prefills!
+  "Runs all prefills registered."
+  [db]
+  (jdbc/with-db-transaction [tra db]
+    (let [prefills (prefill-effects {:db tra})]
+      (doseq [[key prefill] prefills]
+        (println "Running prefill " key)
+        (doseq [[fn & args] prefill]
+          (clojure.pprint/pprint (drop 1 args))
+          (apply fn args))))))
