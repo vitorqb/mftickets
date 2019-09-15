@@ -12,6 +12,7 @@
     [mftickets.middleware.auth :as middleware.auth]
     [mftickets.routes.services.login :as routes.services.login]
     [mftickets.routes.services.helpers :as routes.services.helpers]
+    [mftickets.routes.services.templates :as routes.services.templates]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]))
 
@@ -51,6 +52,7 @@
               :config {:validator-url nil}})}]]
 
    (into ["/login" {}] routes.services.login/routes)
+   (into ["/templates" {}] routes.services.templates/routes)
 
    ["/ping"
     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]

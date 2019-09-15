@@ -5,8 +5,7 @@
    [mount.core :as mount]
    [mftickets.config :as config]
    [luminus-migrations.core :as migrations]
-   [muuntaja.core :as muuntaja]
-   [mftickets.middleware.formats :as middleware.formats]))
+   [muuntaja.core :as muuntaja]))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
