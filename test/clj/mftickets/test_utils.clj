@@ -4,7 +4,9 @@
    [conman.core :as conman]
    [mount.core :as mount]
    [mftickets.config :as config]
-   [luminus-migrations.core :as migrations]))
+   [luminus-migrations.core :as migrations]
+   [muuntaja.core :as muuntaja]
+   [mftickets.middleware.formats :as middleware.formats]))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -29,3 +31,8 @@
      (mount/stop #'mftickets.config/env
                  #'mftickets.handler/init-app
                  #'mftickets.handler/app-routes)))
+
+(defn decode-response-body
+  "Parses and returns the body of a request"
+  [r]
+  (muuntaja/decode-response-body r))
