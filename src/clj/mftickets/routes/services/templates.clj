@@ -3,7 +3,22 @@
    [mftickets.domain.templates :as domain.templates]
    [mftickets.domain.templates.sections :as domain.templates.sections]
    [mftickets.domain.templates.properties :as domain.templates.properties]
+   [mftickets.domain.users :as domain.users]
    [com.rpl.specter :as s]))
+
+(defn- user-has-access?
+  "Does a user has access to a template given it's id?"
+  [user template-id]
+  (let [user-groups (domain.users/get-projects-ids-for-user user)
+        template-groups (domain.templates/get-projects-ids-for-template {:id template-id})]
+    (boolean (some user-groups template-groups))))
+
+(defn- wrap-user-has-access?
+  [handler]
+  (fn [{{{template-id :id} :path} :parameters :mftickets.auth/keys [user] :as request}]
+    (if (or (not template-id) (user-has-access? user template-id))
+      (handler request)
+      {:status 404})))
 
 (defn- assoc-sections
   "Assocs `:sections` for a template."
@@ -40,5 +55,4 @@
   [["/:id"
     {:get {:summary "Get a template."
            :parameters {:path {:id int?}}
-           :responses {200 (constantly true)}
            :handler handle-get}}]])
