@@ -3,8 +3,7 @@
    [mftickets.domain.templates :as domain.templates]
    [mftickets.domain.templates.sections :as domain.templates.sections]
    [mftickets.domain.templates.properties :as domain.templates.properties]
-   [mftickets.domain.users :as domain.users]
-   [com.rpl.specter :as s]))
+   [mftickets.domain.users :as domain.users]))
 
 (defn- user-has-access?
   "Does a user has access to a template given it's id?"
@@ -26,19 +25,11 @@
   (let [sections (domain.templates.sections/get-sections-for-template template)]
     (assoc template :sections sections)))
 
-(defn- assoc-property-to-template
-  "Assocs a single property to a template, inside it's correct section."
-  [template {:keys [template-section-id] :as property}]
-  (s/transform
-   [:sections (s/filterer :id #(= % template-section-id)) s/FIRST :properties]
-   #(conj % property)
-   template))
-
 (defn- assoc-properties
   "Assocs `:properties` for all template `:sections`."
   [template]
   (let [properties (domain.templates.properties/get-properties-for-template template)]
-    (into {} (reduce assoc-property-to-template template properties))))
+    (into {} (reduce domain.templates/assoc-property-to-template template properties))))
 
 (defn- get-template
   "Get's a template from an id."

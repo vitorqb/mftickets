@@ -31,3 +31,18 @@
 
       (testing "Non existing" 
         (is (= #{} (sut/get-projects-ids-for-template {:id 2})))))))
+
+(deftest test-test-assoc-property-to-template
+
+  (testing "Not found"
+    (let [property {:id 1 :template-section-id 2}
+          sections [{:id 3}]
+          template {:sections sections}]
+      (is (= template (sut/assoc-property-to-template template property)))))
+
+  (testing "Base"
+    (let [property {:id 10 :template-section-id 2}
+          sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2}]}]
+          template {:sections sections}]
+      (is (= {:sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2} property]}]}
+             (sut/assoc-property-to-template template property))))))
