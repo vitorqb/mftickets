@@ -21,21 +21,22 @@
           (is (= {:sections sections}
                  (assoc-sections {}))))))))
 
-(deftest test-test-assoc-property-to-sections
+(deftest test-test-assoc-property-to-template
 
-  (let [assoc-property-to-sections #'sut/assoc-property-to-sections]
+  (let [assoc-property-to-template #'sut/assoc-property-to-template]
 
     (testing "Not found"
       (let [property {:id 1 :template-section-id 2}
-            sections [{:id 3}]]
-        (is (= sections (assoc-property-to-sections property sections)))))
+            sections [{:id 3}]
+            template {:sections sections}]
+        (is (= template (assoc-property-to-template template property)))))
 
     (testing "Base"
       (let [property {:id 10 :template-section-id 2}
-            sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2}]}]]
-        (is (= [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2}
-                                            {:id 10 :template-section-id 2}]}]
-               (assoc-property-to-sections property sections)))))))
+            sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2}]}]
+            template {:sections sections}]
+        (is (= {:sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2} property]}]}
+               (assoc-property-to-template template property)))))))
 
 (deftest test-assoc-properties
 
