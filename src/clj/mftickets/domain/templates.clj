@@ -22,3 +22,8 @@
    [:sections (s/filterer :id #(= % template-section-id)) s/FIRST :properties]
    #(conj % property)
    template))
+
+(defn assoc-properties-to-template
+  "Assocs a sequence of properties to a template's sections."
+  [template properties]
+  (into {} (reduce assoc-property-to-template template properties)))

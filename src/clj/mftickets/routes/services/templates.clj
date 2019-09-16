@@ -29,7 +29,7 @@
   "Assocs `:properties` for all template `:sections`."
   [template]
   (let [properties (domain.templates.properties/get-properties-for-template template)]
-    (into {} (reduce domain.templates/assoc-property-to-template template properties))))
+    (domain.templates/assoc-properties-to-template template properties)))
 
 (defn- get-template
   "Get's a template from an id."
