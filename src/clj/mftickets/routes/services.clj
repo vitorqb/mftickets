@@ -52,7 +52,11 @@
               :config {:validator-url nil}})}]]
 
    (into ["/login" {}] routes.services.login/routes)
-   (into ["/templates" {}] routes.services.templates/routes)
+   (into
+    ["/templates"
+     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+      :parameters {:header {:authorization string?}}}]
+    routes.services.templates/routes)
 
    ["/ping"
     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]

@@ -14,3 +14,7 @@ WHERE id = :id
 -- :doc Creates an user
 INSERT INTO users (email)
 VALUES (:email)
+
+-- :name get-projects-ids-for-user* :result :*
+-- :doc Returns all project ids for an user
+SELECT projectId FROM usersProjects WHERE userId = :id

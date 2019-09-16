@@ -16,3 +16,8 @@
 (defn get-user-by-id
   [params]
   (get-user-by-id* params))
+
+(defn get-projects-ids-for-user
+  [params]
+  (or (some->> (get-projects-ids-for-user* params) (map :projectid) set)
+      #{}))

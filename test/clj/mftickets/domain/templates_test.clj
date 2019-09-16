@@ -17,3 +17,17 @@
               :name "Foo"
               :creation-date "2019-09-14T19:08:45"}
              (sut/get-raw-template 1))))))
+
+(deftest test-get-projects-ids-for-template
+
+  (testing "Base"
+    (test-utils/with-db
+      (test-utils/insert!
+       :templates
+       {:id 1 :projectId 1 :name "Foo" :creationDate "2019-09-14T19:08:45"})
+
+      (testing "Existing" 
+        (is (= #{1} (sut/get-projects-ids-for-template {:id 1}))))
+
+      (testing "Non existing" 
+        (is (= #{} (sut/get-projects-ids-for-template {:id 2})))))))

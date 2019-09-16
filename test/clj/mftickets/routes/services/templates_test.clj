@@ -9,7 +9,46 @@
    [mftickets.domain.templates :as domain.templates]
    [mftickets.domain.templates.sections :as domain.templates.sections]
    [mftickets.domain.templates.properties :as domain.templates.properties]
+   [mftickets.domain.users :as domain.users]
+   [mftickets.middleware.auth :as middleware.auth]
    [ring.mock.request :as mock.request]))
+
+(deftest test-user-has-access?
+
+  (let [user-has-access? #'sut/user-has-access?]
+
+    (testing "True"
+      (with-redefs [domain.users/get-projects-ids-for-user (constantly #{1 2})
+                    domain.templates/get-projects-ids-for-template (constantly #{3 4 1})]
+        (is (true? (user-has-access? nil nil)))))
+
+    (testing "True"
+      (with-redefs [domain.users/get-projects-ids-for-user (constantly #{1 2})
+                    domain.templates/get-projects-ids-for-template (constantly #{3 4})]
+        (is (false? (user-has-access? nil nil)))))))
+
+(deftest test-wrap-has-access?
+
+  (let [wrap-user-has-access? #'sut/wrap-user-has-access?]
+
+    (testing "No template id -> calls handler."
+      (let [handler (wrap-user-has-access? identity)
+            request {::foo ::bar}]
+        (is (= request (handler request)))))
+
+    (testing "Template id and user not allowed."
+      (with-redefs [sut/user-has-access? (constantly false)]
+        (let [handler (wrap-user-has-access? identity)
+              request {:parameters {:path {:id 1}}}
+              response (handler request)]
+          (is (= {:status 404} response)))))
+
+    (testing "Template id and user has access."
+      (with-redefs [sut/user-has-access? (fn [user id] (and (= user ::user) (= id 1)))]
+        (let [request {:mftickets.auth/user ::user :parameters {:path {:id 1}}}
+              handler (wrap-user-has-access? #(hash-map ::param %))
+              response (handler request)]
+          (is (= {::param request} response)))))))
 
 (deftest test-assoc-sections
 
@@ -84,25 +123,35 @@
 (deftest test-handle-get
 
   (testing "Inexistant template returns 404"
-    (with-redefs [])))
+    (with-redefs [sut/get-template (constantly nil)]
+      (is (= {:status 404} (sut/handle-get {})))))
+
+  (testing "Existing template is returned"
+    (let [template-id 999]
+      (with-redefs [sut/get-template #(when (= % template-id) ::template)]
+        (is (= {:status 200 :body ::template}
+               (sut/handle-get {:parameters {:path {:id template-id}}})))))))
 
 (deftest test-app-integration-get-template
 
   (testing "Existing template"
     (test-utils/with-app
       (test-utils/with-db
-        (db.prefill/run-prefills! db.core/*db*)
-        (let [req (-> (mock.request/request :get "/api/templates/1"))
-              resp ((app) req)
-              body (test-utils/decode-response-body resp)]
+        (test-utils/with-user-and-token [user token]
+          (with-redefs [sut/user-has-access? #(= user %)]
+            (db.prefill/run-prefills! db.core/*db*)
+            (let [req (-> (mock.request/request :get "/api/templates/1")
+                          (test-utils/auth-header token))
+                  resp ((app) req)
+                  body (test-utils/decode-response-body resp)]
 
-          (testing "Returns 200"
-            (is (= 200 (:status resp))))
+              (testing "Returns 200"
+                (is (= 200 (:status resp))))
 
-          (testing "Returns body with keys"
-            (are [ks f] (f (get-in body ks ::nf))
-              [:id] #(= 1 %)
-              [:project-id] #(= 1 %)
-              [:creation-date] #(= "2019-09-14T19:08:45" %)
-              [:sections] #(= (count %) 1)
-              [:sections 0 :properties] #(= (count %) 5))))))))
+              (testing "Returns body with keys"
+                (are [ks f] (f (get-in body ks ::nf))
+                  [:id] #(= 1 %)
+                  [:project-id] #(= 1 %)
+                  [:creation-date] #(= "2019-09-14T19:08:45" %)
+                  [:sections] #(= (count %) 1)
+                  [:sections 0 :properties] #(= (count %) 5))))))))))
