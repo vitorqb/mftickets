@@ -31,21 +31,22 @@
 
   (let [wrap-user-has-access? #'sut/wrap-user-has-access?]
 
-    (testing "No template id -> calls handler."
+    (testing "No template -> calls handler."
       (let [handler (wrap-user-has-access? identity)
             request {::foo ::bar}]
         (is (= request (handler request)))))
 
-    (testing "Template id and user not allowed."
+    (testing "Template and user not allowed."
       (with-redefs [sut/user-has-access? (constantly false)]
         (let [handler (wrap-user-has-access? identity)
-              request {:parameters {:path {:id 1}}}
+              request {::sut/template {:id 1}}
               response (handler request)]
           (is (= {:status 404} response)))))
 
     (testing "Template id and user has access."
-      (with-redefs [sut/user-has-access? (fn [user id] (and (= user ::user) (= id 1)))]
-        (let [request {:mftickets.auth/user ::user :parameters {:path {:id 1}}}
+      (with-redefs [sut/user-has-access? (fn [user template]
+                                           (and (= user ::user) (= template ::template)))]
+        (let [request {:mftickets.auth/user ::user ::sut/template ::template}
               handler (wrap-user-has-access? #(hash-map ::param %))
               response (handler request)]
           (is (= {::param request} response)))))))
@@ -59,23 +60,6 @@
         (with-redefs [domain.templates.sections/get-sections-for-template (constantly sections)]
           (is (= {:sections sections}
                  (assoc-sections {}))))))))
-
-(deftest test-test-assoc-property-to-template
-
-  (let [assoc-property-to-template #'sut/assoc-property-to-template]
-
-    (testing "Not found"
-      (let [property {:id 1 :template-section-id 2}
-            sections [{:id 3}]
-            template {:sections sections}]
-        (is (= template (assoc-property-to-template template property)))))
-
-    (testing "Base"
-      (let [property {:id 10 :template-section-id 2}
-            sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2}]}]
-            template {:sections sections}]
-        (is (= {:sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2} property]}]}
-               (assoc-property-to-template template property)))))))
 
 (deftest test-assoc-properties
 
@@ -99,38 +83,64 @@
 
 (deftest test-get-template
 
-  (testing "Non-existing template"
-    (with-redefs [domain.templates/get-raw-template (constantly nil)]
-      (is (= {:status 404}
-             (sut/handle-get {:parameters {:path {:id 1}}})))))
+  (let [wrap-get-template #'sut/wrap-get-template
+        wrap-user-has-access? #'sut/wrap-user-has-access?]
 
-  (testing "Existing template"
-    (with-redefs [domain.templates/get-raw-template
-                  #(hash-map :id %)
+    (testing "Non-existing template"
+      (with-redefs [domain.templates/get-raw-template (constantly nil)]
+        (is (= {:status 404}
+               (sut/handle-get {:parameters {:path {:id 1}}})))))
 
-                  domain.templates.sections/get-sections-for-template
-                  (constantly [{:id 9}])
+    (testing "Existing template"
+      (with-redefs [domain.templates/get-raw-template
+                    #(hash-map :id %)
 
-                  domain.templates.properties/get-properties-for-template
-                  (constantly [{:id 8 :template-section-id 9}])]
+                    domain.templates.sections/get-sections-for-template
+                    (constantly [{:id 9}])
 
-      (let [response (sut/handle-get {:parameters {:path {:id 9}}})]
-        (are [ks f] (f (get-in response ks ::nf))
-          [:status]   #(= 200 %)
-          [:body :id] #(= 9 %)
-          [:body :sections] #(= [{:id 9 :properties [{:id 8 :template-section-id 9}]}] %))))))
+                    domain.templates.properties/get-properties-for-template
+                    (constantly [{:id 8 :template-section-id 9}])]
+
+        (let [handler (-> sut/handle-get wrap-get-template)
+              response (handler {:parameters {:path {:id 9}}})]
+          (are [ks f] (f (get-in response ks ::nf))
+            [:status]   #(= 200 %)
+            [:body :id] #(= 9 %)
+            [:body :sections] #(= [{:id 9 :properties [{:id 8 :template-section-id 9}]}] %)))))))
+
+(deftest test-wrap-get-template
+
+  (let [wrap-get-template #'sut/wrap-get-template]
+
+    (testing "Missing template-id"
+      (let [request {}
+            handler (wrap-get-template identity)
+            result (handler request)]
+        (is (= request result))))
+
+    (testing "template-id mapping to no template."
+      (with-redefs [sut/get-template #(if (= % 9) nil ::wrong-argument)]
+        (let [request {:parameters {:path {:id 9}}}
+              handler (wrap-get-template identity)
+              result (handler request)]
+          (is (= request result)))))
+
+    (testing "template-id mapping to template"
+      (with-redefs [sut/get-template #(when (= % 9) ::template)]
+        (let [request {:parameters {:path {:id 9}}}
+              handler (wrap-get-template identity)
+              result (handler request)]
+          (is (= (assoc request ::sut/template ::template) result)))))))
 
 (deftest test-handle-get
 
   (testing "Inexistant template returns 404"
-    (with-redefs [sut/get-template (constantly nil)]
-      (is (= {:status 404} (sut/handle-get {})))))
+    (is (= {:status 404} (sut/handle-get {}))))
 
   (testing "Existing template is returned"
     (let [template-id 999]
-      (with-redefs [sut/get-template #(when (= % template-id) ::template)]
-        (is (= {:status 200 :body ::template}
-               (sut/handle-get {:parameters {:path {:id template-id}}})))))))
+      (is (= {:status 200 :body ::template}
+             (sut/handle-get {::sut/template ::template}))))))
 
 (deftest test-app-integration-get-template
 
@@ -138,7 +148,7 @@
     (test-utils/with-app
       (test-utils/with-db
         (test-utils/with-user-and-token [user token]
-          (with-redefs [sut/user-has-access? #(= user %)]
+          (with-redefs [sut/user-has-access? (fn [user* _] (= user* user))]
             (db.prefill/run-prefills! db.core/*db*)
             (let [req (-> (mock.request/request :get "/api/templates/1")
                           (test-utils/auth-header token))
