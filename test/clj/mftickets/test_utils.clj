@@ -1,5 +1,6 @@
 (ns mftickets.test-utils
   (:require
+   [mftickets.test-utils.impl.factories :as impl.factories]
    [mftickets.db.core :as db.core]
    [mftickets.domain.users :as domain.user]
    [conman.core :as conman]
@@ -8,7 +9,11 @@
    [luminus-migrations.core :as migrations]
    [muuntaja.core :as muuntaja]
    [clojure.java.jdbc :as jdbc]
-   [ring.mock.request :as mock.request]))
+   [ring.mock.request :as mock.request])
+  (:import
+   (mftickets.test_utils.impl.factories Template)
+   (mftickets.test_utils.impl.factories TemplateSection)
+   (mftickets.test_utils.impl.factories TemplateSectionProperty)))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -59,3 +64,12 @@
   "Adds a token to the header of a request."
   [request token-value]
   (mock.request/header request "authorization" (str "Bearer " token-value)))
+
+
+;; Factories
+(defn gen [strategy opts] (impl.factories/gen strategy opts))
+(defn gen-save! [strategy opts] (impl.factories/gen-save! strategy opts insert!))
+(defn save! [strategy obj] (impl.factories/save! strategy obj))
+(def template (impl.factories/Template.))
+(def template-section (impl.factories/TemplateSection.))
+(def template-section-property (impl.factories/TemplateSectionProperty.))
