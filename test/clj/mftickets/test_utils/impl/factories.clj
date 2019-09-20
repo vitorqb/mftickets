@@ -32,6 +32,36 @@
     (save! strategy obj insert!)))
 
 ;; Implementations
+(deftype UserLoginToken []
+  Factory
+  (gen [_ opts]
+    (merge
+     {:id 1
+      :user-id 1
+      :value "AAAAAAAAAAA111111111111111111bbbbbbbbbbbbbbbbb"
+      :created-at "2019-01-01T12:12:12"
+      :has-been-invalidated false}
+     opts))
+
+  DbFactory
+  (table [_] :userLoginTokens)
+  (serialize-to-db [_ opts]
+    (clojure.set/rename-keys
+     opts
+     {:user-id :userId
+      :has-been-invalidated :hasBeenInvalidated
+      :created-at :createdAt})))
+
+(deftype UsersProjects []
+  Factory
+  (gen [_ opts]
+    (merge {:userId 1 :project-id 1} opts))
+
+  DbFactory
+  (table [_] :usersProjects)
+  (serialize-to-db [_ opts]
+    (clojure.set/rename-keys opts {:user-id :userId :project-id :projectId})))
+
 (deftype Template []
   Factory
   (gen [_ opts]

@@ -1,20 +1,20 @@
 (ns mftickets.db.templates.sections-test
   (:require [mftickets.db.templates.sections :as sut]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-            [mftickets.test-utils :as test-utils]))
+            [mftickets.test-utils :as tu]))
 
 (deftest test-get-sections-for-template
 
-  (test-utils/with-db
-    (test-utils/insert! :templateSections {:id 1 :templateId 2 :name "Foo"})
-    (test-utils/insert! :templateSections {:id 2 :templateId 2 :name "Bar"})
-    (test-utils/insert! :templateSections {:id 11 :templateId 12 :name "Baz"})
-    
-    (testing "When exists"
-      (is (= [{:id 1 :template-id 2 :name "Foo"}
-              {:id 2 :template-id 2 :name "Bar"}]
-             (sut/get-sections-for-template {:id 2}))))
+  (tu/with-db
+    (let [template-sections-for-template-2
+          [(tu/gen-save! tu/template-section {:id 1 :name "Foo" :template-id 2})
+           (tu/gen-save! tu/template-section {:id 2 :name "Bar" :template-id 2})]
 
-    (testing "When does not exist"
-      (is (= '()
-             (sut/get-sections-for-template {:id 9}))))))
+          template-section-for-other-templates
+          [(tu/gen-save! tu/template-section {:id 3 :name "Baz" :template-id 3})]]
+    
+      (testing "When exists"
+        (is (= template-sections-for-template-2 (sut/get-sections-for-template {:id 2}))))
+
+      (testing "When does not exist"
+        (is (= '() (sut/get-sections-for-template {:id 9})))))))

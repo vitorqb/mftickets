@@ -13,7 +13,9 @@
   (:import
    (mftickets.test_utils.impl.factories Template)
    (mftickets.test_utils.impl.factories TemplateSection)
-   (mftickets.test_utils.impl.factories TemplateSectionProperty)))
+   (mftickets.test_utils.impl.factories TemplateSectionProperty)
+   (mftickets.test_utils.impl.factories UserLoginToken)
+   (mftickets.test_utils.impl.factories UsersProjects)))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -73,3 +75,5 @@
 (def template (impl.factories/Template.))
 (def template-section (impl.factories/TemplateSection.))
 (def template-section-property (impl.factories/TemplateSectionProperty.))
+(def user-login-token (impl.factories/UserLoginToken.))
+(def users-projects (impl.factories/UsersProjects.))
