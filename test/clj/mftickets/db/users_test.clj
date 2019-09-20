@@ -1,14 +1,14 @@
 (ns mftickets.db.users-test
   (:require [mftickets.db.users :as sut]
-            [mftickets.test-utils :as test-utils]
+            [mftickets.test-utils :as tu]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
 
 (deftest test-get-project-ids-for-user
 
-  (test-utils/with-db
-    (test-utils/insert! :usersProjects {:userId 1 :projectId 1})
-    (test-utils/insert! :usersProjects {:userId 1 :projectId 2})
-    (test-utils/insert! :usersProjects {:userId 2 :projectId 3})
+  (tu/with-db
+    (tu/gen-save! tu/users-projects {:user-id 1 :project-id 1})
+    (tu/gen-save! tu/users-projects {:user-id 1 :project-id 2})
+    (tu/gen-save! tu/users-projects {:user-id 2 :project-id 3})
 
     (testing "Two projects"
       (is (= (sut/get-projects-ids-for-user {:id 1}) #{1 2})))

@@ -4,12 +4,12 @@
             [clojure.java.jdbc :as jdbc]
             [mftickets.utils.date-time :as utils.date-time]
             [mftickets.db.core :as db.core]
-            [mftickets.test-utils :as test-utils]))
+            [mftickets.test-utils :as tu]))
 
 (deftest test-create-user-key!
 
   (testing "Integration"
-    (test-utils/with-db
+    (tu/with-db
       (with-redefs [utils.date-time/now-as-str (constantly "1993-11-23T11:30:25")]
         (let [user-key {:user-id 88 :value "foo"}
               response (sut/create-user-key! user-key)]
@@ -21,7 +21,7 @@
 (deftest test-create-and-retrieve-token
 
   (testing "Integration"
-    (test-utils/with-db
+    (tu/with-db
       (with-redefs [utils.date-time/now-as-str (constantly "1993-11-23T11:30:25")]
         (let [user-token {:user-id 9 :value "foo"}
               response (sut/create-user-token! user-token)]
@@ -34,34 +34,27 @@
 (deftest test-is-valid-user-key?
 
   (testing "True"
-    (test-utils/with-db
+    (tu/with-db
       (let [user-key {:value "foo" :user-id 1}]
         (sut/create-user-key! user-key)
         (is (true? (sut/is-valid-user-key? user-key))))))
 
   (testing "False"
-    (test-utils/with-db
+    (tu/with-db
       (is (nil? (sut/is-valid-user-key? {:value "bar" :user-id 1}))))))
 
 (deftest test-is-valid-token-value?
 
   (testing "When token does not exists"
-    (test-utils/with-db
+    (tu/with-db
       (is (= nil (sut/is-valid-token-value? "foo")))))
 
-  (let [value "foo"
-        raw-token {:id 1
-                   :userId 1
-                   :value value
-                   :createdAt "2019-01-01T12:12:12"
-                   :hasBeenInvalidated true}]
+  (testing "When token has expired"
+    (tu/with-db
+      (let [{:keys [value]} (tu/gen-save! tu/user-login-token {:has-been-invalidated true})]
+        (is (false? (sut/is-valid-token-value? value))))))
 
-    (testing "When token has expired"
-      (test-utils/with-db
-        (test-utils/insert! :userLoginTokens raw-token)
-        (is (= false (sut/is-valid-token-value? value)))))
-
-    (testing "When token exists and is valid"
-      (test-utils/with-db
-        (test-utils/insert! :userLoginTokens (assoc raw-token :hasBeenInvalidated false))
-        (is (= true (sut/is-valid-token-value? value)))))))
+  (testing "When token exists and is valid"
+    (tu/with-db
+      (let [{:keys [value]} (tu/gen-save! tu/user-login-token {:has-been-invalidated false})]
+        (is (true? (sut/is-valid-token-value? value)))))))

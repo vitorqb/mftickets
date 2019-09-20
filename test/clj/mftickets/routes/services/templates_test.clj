@@ -165,3 +165,13 @@
                   [:creation-date] #(= "2019-09-14T19:08:45" %)
                   [:sections] #(= (count %) 1)
                   [:sections 0 :properties] #(= (count %) 5))))))))))
+
+(deftest test-app-integration-get-template-list
+
+  (testing "With two templates"
+    (test-utils/with-app
+      (test-utils/with-db
+        (test-utils/with-user-and-token [user token]
+          (with-redefs [sut/user-has-access? (fn [user* _] (= user* user))]
+
+            ))))))
