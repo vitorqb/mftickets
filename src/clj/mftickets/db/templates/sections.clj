@@ -13,3 +13,10 @@
           (utils.transform/remapkey :id :template-id)
           get-sections-for-template*
           (->> (map #(utils.transform/remapkey % :templateid :template-id)))))
+
+(defn get-sections-for-templates-ids
+  [templates-ids]
+  (->> templates-ids
+       (hash-map :templates-ids)
+       get-sections-for-templates-ids*
+       (map #(utils.transform/remapkey % :templateid :template-id))))

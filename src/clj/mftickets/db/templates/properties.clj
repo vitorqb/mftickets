@@ -6,6 +6,16 @@
 
 (conman/bind-connection db.core/*db* "sql/queries/properties.sql")
 
+(defn- parse-raw-property
+  "Parses a raw property from the db."
+  [raw-property]
+  (-> raw-property
+      (utils.transform/remapkey :templatesectionid :template-section-id)
+      (utils.transform/remapkey :ismultiple :is-multiple)
+      (utils.transform/remapkey :valuetype :value-type)
+      (update :value-type keyword)
+      (update :is-multiple (comp not zero?))))
+
 (defn get-properties-for-template
   "Returns all properties for a template."
   [template]
@@ -13,8 +23,12 @@
           (select-keys [:id])
           (utils.transform/remapkey :id :template-id)
           get-properties-for-template*
-          (->> (map #(utils.transform/remapkey % :templatesectionid :template-section-id))
-               (map #(utils.transform/remapkey % :ismultiple :is-multiple))
-               (map #(utils.transform/remapkey % :valuetype :value-type))
-               (map #(update % :value-type keyword))
-               (map #(update % :is-multiple (comp not zero?))))))
+          (->> (map parse-raw-property))))
+
+(defn get-properties-for-templates-ids
+  "Returns all properties for a list of templates ids"
+  [templates-ids]
+  (some-> templates-ids
+          (->> (hash-map :templates-ids))
+          get-properties-for-templates-ids*
+          (->> (map parse-raw-property))))

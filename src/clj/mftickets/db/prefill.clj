@@ -3,7 +3,10 @@
   (:require
    [clojure.java.jdbc :as jdbc]
    [clojure.core.match :refer [match]]
-   [mftickets.db.prefill.example-template :as db.prefill.example-template]))
+   [mftickets.db.prefill.example-template :as db.prefill.example-template]
+   [mftickets.db.prefill.example-project :as db.prefill.example-project]
+   [mftickets.db.prefill.example-user :as db.prefill.example-user]
+   [mftickets.db.prefill.example-token :as db.prefill.example-token]))
 
 (defn- parse-args
   "Parses a sequence of [:tableName {args}] into a list of jdbc/insert! calls."
@@ -25,7 +28,10 @@
 (defn prefill-effects
   "Returns a map of prefill effects, that can be run using db.core/run!"
   [{:keys [db] :as opts}]
-  {:example-template (parse-args db.prefill.example-template/example-template-prefill opts)})
+  {:example-template (parse-args db.prefill.example-template/example-template-prefill opts)
+   :example-project (parse-args db.prefill.example-project/example-project opts)
+   :example-user (parse-args db.prefill.example-user/example-user opts)
+   :example-token (parse-args mftickets.db.prefill.example-token/example-token opts)})
 
 (defn run-prefills!
   "Runs all prefills registered."

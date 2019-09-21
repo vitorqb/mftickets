@@ -8,6 +8,11 @@
   [id]
   (some->> id (hash-map :id) db.templates/get-raw-template))
 
+(defn get-raw-templates-for-project
+  "Returns a list of raw templates for a project."
+  [{:keys [id]}]
+  (some->> id (hash-map :project-id) db.templates/get-raw-templates-for-project))
+
 (defn get-projects-ids-for-template
   "Get's a set of projects ids for a given template."
   [{:keys [id]}]

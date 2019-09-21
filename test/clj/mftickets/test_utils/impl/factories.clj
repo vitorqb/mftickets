@@ -55,12 +55,21 @@
 (deftype UsersProjects []
   Factory
   (gen [_ opts]
-    (merge {:userId 1 :project-id 1} opts))
+    (merge {:user-id 1 :project-id 1} opts))
 
   DbFactory
   (table [_] :usersProjects)
   (serialize-to-db [_ opts]
     (clojure.set/rename-keys opts {:user-id :userId :project-id :projectId})))
+
+(deftype Project []
+  Factory
+  (gen [_ opts]
+    (merge {:id 1 :name "My Project" :description "My project description"} opts))
+
+  DbFactory
+  (table [_] :projects)
+  (serialize-to-db [_ opts] opts))
 
 (deftype Template []
   Factory
