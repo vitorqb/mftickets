@@ -15,7 +15,8 @@
    (mftickets.test_utils.impl.factories TemplateSection)
    (mftickets.test_utils.impl.factories TemplateSectionProperty)
    (mftickets.test_utils.impl.factories UserLoginToken)
-   (mftickets.test_utils.impl.factories UsersProjects)))
+   (mftickets.test_utils.impl.factories UsersProjects)
+   (mftickets.test_utils.impl.factories Project)))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -60,7 +61,8 @@
 (defn decode-response-body
   "Parses and returns the body of a request"
   [r]
-  (muuntaja/decode-response-body r))
+  (when-not (-> r :headers (get "Content-Type") (= "application/octet-stream"))
+    (muuntaja/decode-response-body r)))
 
 (defn auth-header
   "Adds a token to the header of a request."
@@ -77,3 +79,4 @@
 (def template-section-property (impl.factories/TemplateSectionProperty.))
 (def user-login-token (impl.factories/UserLoginToken.))
 (def users-projects (impl.factories/UsersProjects.))
+(def project (impl.factories/Project.))

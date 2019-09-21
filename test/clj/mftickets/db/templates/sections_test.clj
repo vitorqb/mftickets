@@ -18,3 +18,25 @@
 
       (testing "When does not exist"
         (is (= '() (sut/get-sections-for-template {:id 9})))))))
+
+(deftest test-get-sections-for-templates-ids
+
+  (tu/with-db
+    (let [template-sections-for-template-1
+          [(tu/gen-save! tu/template-section {:id 1 :template-id 1})
+           (tu/gen-save! tu/template-section {:id 2 :template-id 1})]
+
+          template-sections-for-template-2
+          [(tu/gen-save! tu/template-section {:id 3 :template-id 2})
+           (tu/gen-save! tu/template-section {:id 4 :template-id 2})]
+
+          template-sections-for-other-templates
+          [(tu/gen-save! tu/template-section {:id 5 :template-id 200})
+           (tu/gen-save! tu/template-section {:id 6 :template-id 200})]]
+
+      (testing "Empty list"
+        (is (= (sut/get-sections-for-templates-ids []) [])))
+
+      (testing "Two long"
+        (is (= (sut/get-sections-for-templates-ids [1 2])
+               (concat template-sections-for-template-1 template-sections-for-template-2)))))))
