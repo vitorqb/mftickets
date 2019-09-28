@@ -13,6 +13,7 @@
    [mftickets.domain.users :as domain.users]
    [mftickets.domain.projects :as domain.projects]
    [mftickets.middleware.auth :as middleware.auth]
+   [mftickets.middleware.context :as middleware.context]
    [mftickets.utils.kw :as utils.kw]
    [ring.mock.request :as mock.request]))
 
@@ -53,43 +54,6 @@
               handler (wrap-user-has-access-to-template? #(hash-map ::param %))
               response (handler request)]
           (is (= {::param request} response)))))))
-
-(deftest test-user-has-access-to-project?
-
-  (let [user-has-access-to-project? #'sut/user-has-access-to-project?
-        user-id 999
-        user {:id user-id}]
-
-    (with-redefs [domain.users/get-projects-ids-for-user #(if (= (:id %) user-id) #{1 2})]
-
-      (testing "True"
-        (is (true? (user-has-access-to-project? user {:id 1})))
-        (is (true? (user-has-access-to-project? user {:id 2}))))
-
-      (testing "False"
-        (is (false? (user-has-access-to-project? user {:id 3})))
-        (is (false? (user-has-access-to-project? user {:id 4})))))))
-
-(deftest test-wrap-user-has-access-to-project?
-
-  (let [wrap-user-has-access-to-project? #'sut/wrap-user-has-access-to-project?
-        user {:id 1}
-        project {:id 2}]
-    (with-redefs [sut/user-has-access-to-project?
-                  (fn [user* project*] (and (= user user*) (= project project*)))]
-
-      (testing "True"
-        (let [handler (wrap-user-has-access-to-project? identity)
-              request {:mftickets.auth/user user ::sut/project project}
-              response (handler request)]
-          (is (= response request))))
-
-      (testing "False"
-        (let [handler (wrap-user-has-access-to-project? identity)
-              request {:mftickets.auth/user {:id 3} ::sut/project project}
-              response (handler request)]
-          (is (= {:status 400 :body {:message sut/err-msg-invalid-project-id}}
-                 response)))))))
 
 (deftest test-assoc-sections
 
@@ -170,24 +134,6 @@
               handler (wrap-get-template identity)
               result (handler request)]
           (is (= (assoc request ::sut/template ::template) result)))))))
-
-(deftest test-wrap-get-project
-
-  (let [wrap-get-project #'sut/wrap-get-project]
-
-    (testing "Project not found"
-      (with-redefs [domain.projects/get-project #(when-not (= % 1) ::found)]
-        (let [handler (wrap-get-project identity)
-              request {:parameters {:query {:project-id 1}}}
-              response (handler {:parameters {:query {:project-id 1}}})]
-          (is (= {:status 400 :body {:message sut/err-msg-invalid-project-id}} response)))))
-
-    (testing "Project found"
-      (with-redefs [domain.projects/get-project #(when (= % 1) ::project)]
-        (let [handler (wrap-get-project identity)
-              request {:parameters {:query {:project-id 1}}}
-              response (handler request)]
-          (is (= (assoc request ::sut/project ::project) response)))))))
 
 (deftest test-handle-get
 
@@ -306,4 +252,4 @@
         templates [::template1 ::template2]]
     (with-redefs [sut/get-project-templates #(when (= % project) templates)]
       (is (= {:status 200 :body templates}
-             (sut/handle-get-project-templates {::sut/project project}))))))
+             (sut/handle-get-project-templates {::middleware.context/project project}))))))

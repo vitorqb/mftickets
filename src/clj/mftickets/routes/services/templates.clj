@@ -4,9 +4,12 @@
    [mftickets.domain.templates.sections :as domain.templates.sections]
    [mftickets.domain.templates.properties :as domain.templates.properties]
    [mftickets.domain.projects :as domain.projects]
-   [mftickets.domain.users :as domain.users]))
+   [mftickets.domain.users :as domain.users]
+   [mftickets.middleware.context :as middleware.context]
+   [clojure.set]))
 
 (def err-msg-invalid-project-id "Invalid project-id!")
+(def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
 
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
@@ -21,22 +24,6 @@
     (if (or (not template) (user-has-access-to-template? user template))
       (handler request)
       {:status 404})))
-
-(defn- user-has-access-to-project?
-  "Does a user has access to a project?"
-  [user project]
-  {:pre [(not (nil? user)) (not (nil? project))]
-   :post [#(boolean %)]}
-  (contains? (domain.users/get-projects-ids-for-user user) (:id project)))
-
-(defn- wrap-user-has-access-to-project?
-  "Middleware that returns 400 if a user does not have access to a project."
-  [handler]
-  (fn [{::keys [project] :mftickets.auth/keys [user] :as request}]
-    {:pre [(not (nil? project)) (not (nil? user))]}
-    (if (user-has-access-to-project? user project)
-      (handler request)
-      {:status 400 :body {:message err-msg-invalid-project-id}})))
 
 (defn- assoc-sections
   "Assocs `:sections` for a template."
@@ -74,21 +61,20 @@
                            identity)]
       (-> request assoc-template handler))))
 
-(defn- wrap-get-project
-  "Wrapper that assocs ::project to the request, if found. Else returns 400."
-  [handler]
-  (fn [{{{:keys [project-id]} :query} :parameters :as request}]
-    (if-let [project (domain.projects/get-project project-id)]
-      (-> request (assoc ::project project) handler)
-      {:status 400 :body {:message err-msg-invalid-project-id}})))
-
 (defn handle-get
   [{::keys [template]}]
   (if template {:status 200 :body template} {:status 404}))
 
 (defn handle-get-project-templates
-  [{::keys [project]}]
+  [{::middleware.context/keys [project]}]
   {:status 200 :body (get-project-templates project)})
+
+(def ^:private wrap-get-project
+  [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])
+
+(def ^:private wrap-user-has-access-to-project?
+  [middleware.context/wrap-user-has-access-to-project?
+   {:no-access invalid-project-id-response}])
 
 (def routes
   [["/:id"

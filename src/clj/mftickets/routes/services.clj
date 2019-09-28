@@ -13,6 +13,7 @@
     [mftickets.routes.services.login :as routes.services.login]
     [mftickets.routes.services.helpers :as routes.services.helpers]
     [mftickets.routes.services.templates :as routes.services.templates]
+    [mftickets.routes.services.projects :as routes.services.projects]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]))
 
@@ -57,6 +58,11 @@
      {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
       :parameters {:header {:authorization string?}}}]
     routes.services.templates/routes)
+   (into
+    ["/projects"
+     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+      :parameters {:header {:authorization string?}}}]
+    routes.services.projects/routes)
 
    ["/ping"
     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
