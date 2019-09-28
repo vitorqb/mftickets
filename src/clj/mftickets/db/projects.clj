@@ -8,3 +8,7 @@
 (defn get-project
   [{:keys [id]}]
   (some->> id (hash-map :id) get-project*))
+
+(defn get-projects-for-user
+  [{:keys [user-id]}]
+  (some->> user-id (hash-map :user-id) get-projects-for-user*))

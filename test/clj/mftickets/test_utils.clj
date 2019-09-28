@@ -16,7 +16,8 @@
    (mftickets.test_utils.impl.factories TemplateSectionProperty)
    (mftickets.test_utils.impl.factories UserLoginToken)
    (mftickets.test_utils.impl.factories UsersProjects)
-   (mftickets.test_utils.impl.factories Project)))
+   (mftickets.test_utils.impl.factories Project)
+   (mftickets.test_utils.impl.factories User)))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -72,7 +73,9 @@
 
 ;; Factories
 (defn gen [strategy opts] (impl.factories/gen strategy opts))
-(defn gen-save! [strategy opts] (impl.factories/gen-save! strategy opts insert!))
+(defn gen-save!
+  ([strategy] (gen-save! strategy {}))
+  ([strategy opts] (impl.factories/gen-save! strategy opts insert!)))
 (defn save! [strategy obj] (impl.factories/save! strategy obj))
 (def template (impl.factories/Template.))
 (def template-section (impl.factories/TemplateSection.))
@@ -80,3 +83,4 @@
 (def user-login-token (impl.factories/UserLoginToken.))
 (def users-projects (impl.factories/UsersProjects.))
 (def project (impl.factories/Project.))
+(def user (impl.factories/User.))

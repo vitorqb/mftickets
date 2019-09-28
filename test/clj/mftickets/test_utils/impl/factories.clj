@@ -71,6 +71,14 @@
   (table [_] :projects)
   (serialize-to-db [_ opts] opts))
 
+(deftype User []
+  Factory
+  (gen [_ opts] (merge {:id 1 :email "foo@bar.com"} opts))
+
+  DbFactory
+  (table [_] :users)
+  (serialize-to-db [_ opts] opts))
+
 (deftype Template []
   Factory
   (gen [_ opts]
