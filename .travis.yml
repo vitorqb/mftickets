@@ -1,2 +1,5 @@
 script: echo '{:test true}' >test-config.edn && lein test
 language: clojure
+cache:
+  directories:
+    - $HOME/.m2
