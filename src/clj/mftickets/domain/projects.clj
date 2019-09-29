@@ -14,3 +14,7 @@
    [db.projects/assign-user! {:user-id (:id user) :project-id ::db.core/<}]
    [:project-id ::db.core/<]
    [db.projects/get-project {:id ::db.core/<}]))
+(defn update-project!
+  "Updates a project."
+  [{:keys [id]} {:keys [name description]}]
+  (db.projects/update-project! {:id id :name name :description description}))

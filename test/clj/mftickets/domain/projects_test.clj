@@ -48,3 +48,8 @@
                  (tu/count! "FROM usersProjects WHERE userId=? AND projectId=?"
                             (:id user)
                             (:id project)))))))))
+
+(deftest test-update-project!
+  (with-redefs [db.projects/update-project! identity]
+    (is (= {:id 1 :name "N" :description "D"}
+           (sut/update-project! {:id 1} {:name "N" :description "D"})))))

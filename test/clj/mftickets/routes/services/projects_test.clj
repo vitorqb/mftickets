@@ -12,6 +12,18 @@
     (is (= {:status 200 :body {:id 9}}
            (handle-get #::middleware.context{:project {:id 9}})))))
 
+(deftest test-handle-put
+  (let [handle-put #'sut/handle-put
+        project {:id 1 :name "Old N" :description "Old D"}
+        params {:name "New N" :description "New D"}
+        request {::middleware.context/project project
+                 :parameters {:body params}}]
+    (with-redefs [domain.projects/update-project!
+                  (fn [project* params*]
+                    (if (and (= project* project) (= params* params))
+                      (merge project* params*)))]
+      (is (= {:status 200 :body (merge project params)} (handle-put request))))))
+
 (deftest test-handler-post
   (let [handle-post #'sut/handle-post
         user {:id 921}
@@ -97,4 +109,17 @@
                            ((app))
                            tu/decode-response-body)]
               (is (some #(and (= (:name %) "Foo123") (= (:description %) "Bar") )
-                        body)))))))))
+                        body))))
+
+          ;; Finally, he modifies the name and sees it updated
+          (testing "Modifying the name of a project with PUT returns 200 with modified project."
+            (let [response (-> (mock.request/request :put "/api/projects/99")
+                               (mock.request/json-body {:name "NEW NAME"
+                                                        :description "NEW DESCRIPTION"})
+                               (tu/auth-header token)
+                               ((app)))
+                  body (tu/decode-response-body response)]
+              (is (= 200 (:status response)))
+              (is (= 99 (:id body)))
+              (is (= "NEW NAME" (:name body)))
+              (is (= "NEW DESCRIPTION" (:description body))))))))))

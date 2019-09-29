@@ -43,3 +43,18 @@
     (tu/with-db
       (sut/assign-user! {:user-id 1 :project-id 2})
       (is (= 1 (tu/count! "FROM usersProjects WHERE userId=? AND projectId=?" 1 2))))))
+
+
+(deftest test-update-project!
+  (tu/with-db
+    (let [old-project (tu/gen-save! tu/project {:id 1 :name "ON" :description "OD"})
+          new-project (sut/update-project! {:id 1 :name "NN" :description "ND"})]
+
+      (testing "Returns updated project"
+        (is (= {:id 1 :name "NN" :description "ND"} new-project)))
+
+      (testing "Actually changes db"
+        (is (zero? (tu/count! "FROM projects WHERE id=? AND name=? AND description=?"
+                              1 "ON" "OD")))
+        (is (= 1 (tu/count! "FROM projects WHERE id=? AND name=? AND description=?"
+                            1 "NN" "ND")))))))

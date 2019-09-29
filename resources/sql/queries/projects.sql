@@ -21,3 +21,9 @@ VALUES (:name, :description);
 -- :doc Creates an entry on the usersProjects table.
 INSERT INTO usersProjects (userId, projectId)
 VALUES (:user-id, :project-id);
+
+-- :name update-project!* :! :n
+-- :doc Updates a project
+UPDATE projects
+SET name = :name, description = :description
+WHERE id = :id;

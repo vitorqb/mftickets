@@ -27,3 +27,8 @@
   [{:keys [user-id project-id]}]
   (doto {:user-id user-id :project-id project-id}
     (create-user-project!*)))
+
+(defn update-project!
+  [{:keys [id name description]}]
+  (update-project!* {:id id :name name :description description})
+  (get-project {:id id}))
