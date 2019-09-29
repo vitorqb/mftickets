@@ -11,3 +11,13 @@ FROM usersProjects
 JOIN users ON usersProjects.userId = users.id
 JOIN projects ON usersProjects.projectId = projects.id
 WHERE users.id = :user-id;
+
+-- :name create-project!* :insert :raw
+-- :doc Creates a project.
+INSERT INTO projects (name, description)
+VALUES (:name, :description);
+
+-- :name create-user-project!* :insert :raw
+-- :doc Creates an entry on the usersProjects table.
+INSERT INTO usersProjects (userId, projectId)
+VALUES (:user-id, :project-id);

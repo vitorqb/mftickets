@@ -1,10 +1,11 @@
 (ns mftickets.db.core
   (:require
-    [clojure.java.jdbc :as jdbc]
-    [conman.core :as conman]
-    [java-time.pre-java8 :as jt]
-    [mount.core :refer [defstate]]
-    [mftickets.config :refer [env]]))
+   [clojure.walk :as walk]
+   [clojure.java.jdbc :as jdbc]
+   [conman.core :as conman]
+   [java-time.pre-java8 :as jt]
+   [mount.core :refer [defstate]]
+   [mftickets.config :refer [env]]))
 
 (defstate ^:dynamic *db*
           :start (conman/connect! {:jdbc-url (env :database-url)})
@@ -15,13 +16,16 @@
 (defn run-effects!
   "Runs a bunch of functions inside a transaction.
   `funs` must be a sequence of (fun & args).
-  Returns the value of the last applied fun."
+  Returns the value of the last applied fun.
+  If the keyword `::<` is found in args, it is substituted by the current value.
+  The check is done view clojure.walk/postwalk."
   [[fun & args] & funs-args]
-  (let [result (atom nil)]
+  (let [result (atom nil)
+        fun-args* (concat [(apply vector fun args)] funs-args)]
     (conman/with-transaction [*db*]
-      (reset! result (apply fun args))
-      (doseq [[fun* & args*] funs-args]
-        (reset! result (apply fun* args*))))
+      (doseq [[fun** & args*] fun-args*
+              :let [args** (walk/postwalk #(if (= % ::<) @result %) args*)]]
+        (reset! result (apply fun** args**))))
     @result))
 
 (defmacro with-rollback

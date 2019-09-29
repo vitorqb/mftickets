@@ -26,6 +26,15 @@
   [table params]
   (jdbc/insert! db.core/*db* table params))
 
+(defn count!
+  "A shortcut for a count statement."
+  [from-where-clause & params]
+  (or (some->> (apply vector (str "SELECT COUNT(*) AS result " from-where-clause) params)
+               (jdbc/query db.core/*db*)
+               first
+               :result)
+      0))
+
 (defmacro with-db
   "A function to be used to tests that demand db access."
   [& body]
