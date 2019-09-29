@@ -1,7 +1,8 @@
 (ns mftickets.db.projects-test
   (:require [mftickets.db.projects :as sut]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-            [mftickets.test-utils :as tu]))
+            [mftickets.test-utils :as tu]
+            [clojure.spec.alpha :as spec]))
 
 (deftest test-get-projects-for-user
 
@@ -26,3 +27,34 @@
         (testing "Brings existing projects for the user"
           (is (= [(sut/get-project {:id 1})]
                  (sut/get-projects-for-user {:user-id (:id user)}))))))))
+
+
+(deftest test-create-project!
+  (testing "Base"
+    (tu/with-db
+      (let [project (sut/create-project! {:name "FF" :description "DD"})]
+        (is (= "FF" (:name project)))
+        (is (= "DD" (:description project)))
+        (is (int? (:id project))))
+      (is (= 1 (tu/count! "FROM projects WHERE name=? AND description=?" "FF" "DD"))))))
+
+(deftest test-assign-user!
+  (testing "Base"
+    (tu/with-db
+      (sut/assign-user! {:user-id 1 :project-id 2})
+      (is (= 1 (tu/count! "FROM usersProjects WHERE userId=? AND projectId=?" 1 2))))))
+
+
+(deftest test-update-project!
+  (tu/with-db
+    (let [old-project (tu/gen-save! tu/project {:id 1 :name "ON" :description "OD"})
+          new-project (sut/update-project! {:id 1 :name "NN" :description "ND"})]
+
+      (testing "Returns updated project"
+        (is (= {:id 1 :name "NN" :description "ND"} new-project)))
+
+      (testing "Actually changes db"
+        (is (zero? (tu/count! "FROM projects WHERE id=? AND name=? AND description=?"
+                              1 "ON" "OD")))
+        (is (= 1 (tu/count! "FROM projects WHERE id=? AND name=? AND description=?"
+                            1 "NN" "ND")))))))
