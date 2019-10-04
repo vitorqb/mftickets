@@ -10,12 +10,17 @@
     [mftickets.middleware.formats :as formats]
     [mftickets.middleware.exception :as exception]
     [mftickets.middleware.auth :as middleware.auth]
+    [mftickets.routes.services.app-metadata :as routes.services.app-metadata]
     [mftickets.routes.services.login :as routes.services.login]
     [mftickets.routes.services.helpers :as routes.services.helpers]
     [mftickets.routes.services.templates :as routes.services.templates]
     [mftickets.routes.services.projects :as routes.services.projects]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]))
+
+(def wrap-auth
+  "A wrapper that authenticates using the user token."
+  [middleware.auth/wrap-auth routes.services.helpers/token->user-or-err])
 
 (defn service-routes []
   ["/api"
@@ -52,20 +57,22 @@
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
+   (into ["/app-metadata" {:middleware [wrap-auth]}] routes.services.app-metadata/routes)
+
    (into ["/login" {}] routes.services.login/routes)
    (into
     ["/templates"
-     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+     {:middleware [wrap-auth]
       :parameters {:header {:authorization string?}}}]
     routes.services.templates/routes)
    (into
     ["/projects"
-     {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+     {:middleware [wrap-auth]
       :parameters {:header {:authorization string?}}}]
     routes.services.projects/routes)
 
    ["/ping"
-    {:middleware [[middleware.auth/wrap-auth routes.services.helpers/token->user-or-err]]
+    {:middleware [wrap-auth]
      :parameters {:header {:authorization string?}}
      :get (constantly (ok {:message "pong"}))}]
    
