@@ -1,7 +1,9 @@
 (ns mftickets.routes.services.projects
-  (:require
-   [mftickets.middleware.context :as middleware.context]
-   [mftickets.domain.projects :as domain.projects]))
+  (:require [clojure.core.match :as match]
+            [mftickets.domain.projects :as domain.projects]
+            [mftickets.domain.templates :as domain.templates]
+            [mftickets.middleware.context :as middleware.context]
+            [mftickets.inject :refer [inject]]))
 
 (defn- handle-get
   "Handler for a get project request"
@@ -21,6 +23,20 @@
   {:status 200
    :body (domain.projects/create-project! {:user user :name name :description description})})
 
+(defn- handle-delete
+  "Handlers for a delete project request"
+  [{::middleware.context/keys [project]}]
+
+  (let [delete-result (domain.projects/delete-project! inject project)]
+
+    (match/match delete-result
+
+      ::domain.projects/error-project-has-templates
+      {:status 400 :message "Can't delete a project with associated templates."}
+
+      _
+      {:status 204})))
+
 (defn- handle-get-projects
   "Handler for a list of projects"
   [{:mftickets.auth/keys [user]}]
@@ -35,10 +51,13 @@
      :get {:summary "Get a project."
            :parameters {:path {:id int?}}
            :handler handle-get}
-     :put {:summary "Put for a rpoject"
+     :put {:summary "Put for a project"
            :parameters {:path {:id int?}
                         :body {:name string? :description string?}}
-           :handler handle-put}}]
+           :handler handle-put}
+     :delete {:summary "Delete for a project"
+              :parameters {:path {:id int?}}
+              :handler handle-delete}}]
    [""
     {:middleware []
      :get {:summary "Get's a list of projects for an user."

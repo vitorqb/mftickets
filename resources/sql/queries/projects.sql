@@ -27,3 +27,11 @@ VALUES (:user-id, :project-id);
 UPDATE projects
 SET name = :name, description = :description
 WHERE id = :id;
+
+-- :name delete-project!* :! :n
+-- :doc Deletes a project
+DELETE FROM projects WHERE id = :id;
+
+-- :name delete-all-users-for-project!* :! :n
+-- :doc Deletes all users from usersProjects for a given project
+DELETE FROM usersProjects WHERE projectId = :id;

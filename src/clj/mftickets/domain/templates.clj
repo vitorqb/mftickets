@@ -32,3 +32,8 @@
   "Assocs a sequence of properties to a template's sections."
   [template properties]
   (into {} (reduce assoc-property-to-template template properties)))
+
+(defn count-templates-for-project
+  "Counts the number of templates for a project."
+  [{:keys [id]}]
+  (->> id (hash-map :project-id) db.templates/count-templates-for-project))

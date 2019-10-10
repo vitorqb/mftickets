@@ -53,3 +53,19 @@
   (with-redefs [db.projects/update-project! identity]
     (is (= {:id 1 :name "N" :description "D"}
            (sut/update-project! {:id 1} {:name "N" :description "D"})))))
+
+(deftest test-delete-project!
+
+  (testing "Error"
+    (let [count-templates (constantly 1)
+          inject {::sut/count-templates count-templates}
+          project {:id 1}]
+      (is (= ::sut/error-project-has-templates (sut/delete-project! inject project)))))
+
+  (testing "Non-error"
+    (with-redefs [db.projects/delete-project (fn [x] [::delete-project x])]
+      (let [count-templates (constantly 0)
+            inject {::sut/count-templates count-templates}
+            project {:id 1}]
+        (is (= [::delete-project project]
+               (sut/delete-project! inject project)))))))

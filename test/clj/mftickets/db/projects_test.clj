@@ -58,3 +58,19 @@
                               1 "ON" "OD")))
         (is (= 1 (tu/count! "FROM projects WHERE id=? AND name=? AND description=?"
                             1 "NN" "ND")))))))
+
+(deftest test-delete-project!
+
+  (tu/with-db
+    (let [user (tu/gen-save! tu/user)
+          project (tu/gen-save! tu/project)
+          user-project (tu/gen-save! tu/users-projects {:project-id (:id project)
+                                                        :user-id (:id user)})]
+
+      (sut/delete-project project)
+
+      (testing "Deletes the project"
+        (is (zero? (tu/count! "FROM projects WHERE id=?" (:id project)))))
+
+      (testing "Deletes the userProject"
+        (is (zero? (tu/count! "FROM usersProjects WHERE projectId=?" (:id project))))))))

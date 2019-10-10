@@ -32,3 +32,8 @@
   [{:keys [id name description]}]
   (update-project!* {:id id :name name :description description})
   (get-project {:id id}))
+
+(defn delete-project
+  [{:keys [id]}]
+  (delete-project!* {:id id})
+  (delete-all-users-for-project!* {:id id}))
