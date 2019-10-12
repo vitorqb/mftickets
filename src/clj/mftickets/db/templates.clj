@@ -20,3 +20,7 @@
            get-raw-templates-for-project*
            (map #(utils.transform/remapkey % :projectid :project-id))
            (map #(utils.transform/remapkey % :creationdate :creation-date))))
+
+(defn count-templates-for-project
+  [data]
+  (count (get-raw-templates-for-project data)))

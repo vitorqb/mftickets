@@ -35,6 +35,20 @@
       (is (= (handle-post request)
              {:status 200 :body new-project})))))
 
+(deftest test-handle-delete
+
+  (let [handle-delete #'sut/handle-delete]
+
+    (testing "Error if delete-result returns error"
+      (with-redefs [domain.projects/delete-project!
+                    (constantly ::domain.projects/error-project-has-templates)]
+        (is (= {:status 400 :message "Can't delete a project with associated templates."}
+               (handle-delete {})))))
+
+    (testing "204 when success"
+      (with-redefs [domain.projects/delete-project! (constantly nil)]
+        (is (= {:status 204} (handle-delete {})))))))
+
 (deftest test-handle-get-projects
   (let [handle-get-projects #'sut/handle-get-projects 
         user {:id 999}
@@ -122,4 +136,19 @@
               (is (= 200 (:status response)))
               (is (= 99 (:id body)))
               (is (= "NEW NAME" (:name body)))
-              (is (= "NEW DESCRIPTION" (:description body))))))))))
+              (is (= "NEW DESCRIPTION" (:description body)))))
+
+          ;; And he can delete it!
+          (testing "Deleting a project... "
+            
+            (testing "returns 204 no content"
+              (let [response (-> (mock.request/request :delete "/api/projects/99")
+                                 (tu/auth-header token)
+                                 ((app)))]
+                (is (= 204 (:status response)))))
+
+            (testing "sees 404 after deleting"
+              (let [response (-> (mock.request/request :get "/api/projects/99")
+                                 (tu/auth-header token)
+                                 ((app)))]
+                (is (= 404 (:status response)))))))))))
