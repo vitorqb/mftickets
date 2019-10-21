@@ -8,6 +8,11 @@
   [template]
   (db.templates.properties/get-properties-for-template template))
 
+(defn get-properties-for-templates
+  "Returns a list with all properties for a list of templates."
+  [template]
+  (db.templates.properties/get-properties-for-templates-ids (map :id template)))
+
 (defn properties-getter
   "Given a list of templates, returns a getter fn for the template properties."
   [templates]

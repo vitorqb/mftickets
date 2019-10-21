@@ -8,6 +8,11 @@
   [template]
   (db.templates.sections/get-sections-for-template template))
 
+(defn get-sections-for-templates
+  "Returns a list of sections for a list of templates."
+  [templates]
+  (->> templates (map :id) db.templates.sections/get-sections-for-templates-ids))
+
 (defn sections-getter
   "Given a list of templates, returns a getter fn for the template sections"
   [templates]
