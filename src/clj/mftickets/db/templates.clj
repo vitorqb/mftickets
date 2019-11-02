@@ -16,15 +16,23 @@
           (utils.transform/remapkey :creationdate :creation-date)))
 
 (defn get-raw-templates-for-project
-  [{:keys [project-id] :as opts}]
-  (let [pagination (db.core/parse-pagination-data opts)]
-    (some->> {:project-id project-id :pagination pagination}
+  [{:keys [project-id name-like] :as opts}]
+  (let [pagination (db.core/parse-pagination-data opts)
+        name-like* (db.core/parse-string-match name-like)]
+    (some->> {:project-id project-id :pagination pagination :name-like name-like*}
              get-raw-templates-for-project*
              (map #(utils.transform/remapkey % :projectid :project-id))
              (map #(utils.transform/remapkey % :creationdate :creation-date)))))
 
 (defn count-templates-for-project
-  [data]
+  [{:keys [name-like] :as data}]
+
   {:post [(int? %)]}
-  (or (some-> data count-templates-for-project* :response)
-      0))
+
+  (let [name-like* (db.core/parse-string-match name-like)
+        data* (assoc data :name-like name-like*)]
+    (or (some-> data* count-templates-for-project* :response)
+        0)))
+
+#_(do (require '[hugsql.core :as h])
+      (h/def-sqlvec-fns "sql/queries/templates.sql"))

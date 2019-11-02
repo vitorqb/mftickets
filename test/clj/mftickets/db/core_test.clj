@@ -17,3 +17,14 @@
       
       (is (= {:offset (-> page-number dec (* page-size)) :limit page-size}
              (sut/parse-pagination-data pagination-data))))))
+
+(deftest test-parse-string-match
+
+  (testing "nil"
+    (is (nil? (sut/parse-string-match nil))))
+
+  (testing "No spaces"
+    (is (= "%foo%" (sut/parse-string-match "foo"))))
+
+  (testing "Spaces replaces by %"
+    (is (= "%foo%bar%" (sut/parse-string-match "foo bar")))))

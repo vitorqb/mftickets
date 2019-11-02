@@ -59,18 +59,19 @@
   (if template {:status 200 :body template} {:status 404}))
 
 (defn handle-get-project-templates
-  [{::middleware.context/keys [project] :as request}]
-  (let [pagination-data
-        (select-keys request
-                     [::middleware.pagination/page-number
-                      ::middleware.pagination/page-size])
-        
-        opts
-        (assoc pagination-data :project project)
+  [{::middleware.context/keys [project]
+    ::middleware.pagination/keys [page-number page-size]
+    {{:keys [name-like]} :query} :parameters
+    :as request}]
+
+  (let [opts
+        (-> request
+            (select-keys [::middleware.pagination/page-number ::middleware.pagination/page-size])
+            (assoc :project project :name-like name-like))
 
         templates (domain.templates/get-templates-for-project inject opts)
 
-        templates-count (domain.templates/count-templates-for-project project)]
+        templates-count (domain.templates/count-templates-for-project opts)]
 
     {:status 200
      ::middleware.pagination/items templates
@@ -96,5 +97,6 @@
      :get {:summary "Get's a list of templates for a project."
            :parameters {:query {:project-id int?
                                 (ds/opt :pageSize) int?
-                                (ds/opt :pageNumber) int?}}
+                                (ds/opt :pageNumber) int?
+                                (ds/opt :name-like) string?}}
            :handler handle-get-project-templates}}]])

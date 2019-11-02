@@ -13,8 +13,11 @@
 
 (defn- get-raw-templates-for-project
   "Returns a list of raw templates for a project."
-  [{{:keys [id]} :project ::middleware.pagination/keys [page-number page-size]}]
+  [{{:keys [id]} :project
+    :keys [name-like]
+    ::middleware.pagination/keys [page-number page-size]}]
   (let [opts {:project-id id
+              :name-like name-like
               ::middleware.pagination/page-number page-number
               ::middleware.pagination/page-size page-size}]
     (db.templates/get-raw-templates-for-project opts)))
@@ -54,19 +57,21 @@
 
 (defn count-templates-for-project
   "Counts the number of templates for a project."
-  [{:keys [id]}]
-  (->> id (hash-map :project-id) db.templates/count-templates-for-project))
+  [{:keys [project name-like]}]
+  (let [opts {:project-id (:id project) :name-like name-like}]
+    (db.templates/count-templates-for-project opts)))
 
 (defn get-templates-for-project
   "Returns a list of templates for a project."
   [{::domain.templates.inject/keys [get-properties-for-templates get-sections-for-templates]
     :as inject}
-   {:keys [project] ::middleware.pagination/keys [page-number page-size]}]
+   {:keys [project name-like] ::middleware.pagination/keys [page-number page-size]}]
 
   {:pre [(fn? get-properties-for-templates) (fn? get-sections-for-templates)]}
 
   (let [raw-templates-opts
         {:project project
+         :name-like name-like
          ::middleware.pagination/page-number page-number
          ::middleware.pagination/page-size page-size}
 
