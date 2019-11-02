@@ -21,7 +21,7 @@
     (tu/with-db
       (let [templates [(tu/gen-save! tu/template {:id 1 :project-id 1})
                        (tu/gen-save! tu/template {:id 2 :project-id 1})
-                       (tu/gen-save! tu/template {:id 3 :project-id 1})
+                       (tu/gen-save! tu/template {:id 3 :project-id 1 :name "zzzzz"})
                        (tu/gen-save! tu/template {:id 4 :project-id 2})]]
 
         (testing "Base"        
@@ -46,7 +46,13 @@
                         ::middleware.pagination/page-number 2
                         ::middleware.pagination/page-size 2}]
               (is (= [(templates 2)]
-                     (get-raw-templates-for-project opts))))))))))
+                     (get-raw-templates-for-project opts))))))
+
+        (testing "Filtered by name"
+          (let [name-like "zzzzz"
+                opts {:project {:id 1} :name-like name-like}]
+            (is (= [(templates 2)]
+                   (get-raw-templates-for-project opts)))))))))
 
 (deftest test-get-projects-ids-for-template
 
@@ -134,6 +140,9 @@
              ::middleware.pagination/page-number 2
              ::middleware.pagination/page-size   2}]
         (with-redefs [sut/get-raw-templates-for-project
-                      #(and (= %1 opts) [raw-template])]
+                      #(and (= 2 (::middleware.pagination/page-number %))
+                            (= 2 (::middleware.pagination/page-size %))
+                            (= project (:project %))
+                            [raw-template])]
           (is (= expected-templates
                  (sut/get-templates-for-project inject opts))))))))

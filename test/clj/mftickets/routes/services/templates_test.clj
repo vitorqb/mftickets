@@ -250,7 +250,25 @@
                 (is (= 1 page-number))
                 (is (= 1 page-size))
                 (is (= 1 (count items)))
-                (is (= 2 total-items-count))))))))))
+                (is (= 2 total-items-count))))
+
+            ;; Now adds a template with a funny name
+            (tu/gen-save! tu/template {:id 4 :name "funny NaMe!" :project-id 99})
+
+            (testing "Filtering by name"
+              (let [request
+                    (-> (mock.request/request :get "/api/templates")
+                        (mock.request/query-string {:project-id 99 :name-like "funny name"})
+                        (tu/auth-header token))
+
+                    resp
+                    ((app) request)
+
+                    {:keys [page-number page-size total-items-count items] :as body}
+                    (tu/decode-response-body resp)]
+                (is (= 1 (count items)))
+                (is (= 4 (-> items first :id)))
+                (is (= 1 total-items-count))))))))))
 
 (deftest test-handle-get-project-templates
 
@@ -261,10 +279,14 @@
           project
           {:id 9}
 
+          name-like
+          "foo"
+
           request
           {::middleware.pagination/page-number 2
            ::middleware.pagination/page-size 3
-           ::middleware.context/project project}
+           ::middleware.context/project project
+           :parameters {:query {:name-like name-like}}}
 
           templates
           [{:id 11}]
@@ -277,10 +299,11 @@
                       (and (= project (:project opts))
                            (= 2 (::middleware.pagination/page-number opts))
                            (= 3 (::middleware.pagination/page-size opts))
+                           (= name-like (:name-like opts))
                            templates))
 
                     domain.templates/count-templates-for-project
-                    (fn [project*] (when (= project project*) templates-count))]
+                    (fn [opts] (when (= project (:project opts)) templates-count))]
         
         (is (= {:status 200
                 ::middleware.pagination/items templates

@@ -9,6 +9,9 @@ WHERE id = :id;
 SELECT id, projectId, name, creationDate
 FROM templates
 WHERE projectId = :project-id
+/*~ (when (:name-like params) */
+AND name LIKE :value:name-like
+/*~ ) ~*/
 /*~ (when (:pagination params) */
 ORDER BY id ASC
 LIMIT :value:pagination.limit
@@ -20,4 +23,8 @@ OFFSET :value:pagination.offset
 -- :doc Counts how many templates there are for a project.
 SELECT COUNT(*) AS response
 FROM templates
-WHERE projectId = :project-id;
+WHERE projectId = :project-id
+/*~ (when (:name-like params) */
+AND name LIKE :value:name-like
+/*~ ) ~*/
+;

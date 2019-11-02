@@ -1,6 +1,7 @@
 (ns mftickets.db.core
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as spec]
+            [clojure.string :as str]
             [clojure.walk :as walk]
             [conman.core :as conman]
             [java-time.pre-java8 :as jt]
@@ -59,6 +60,11 @@
     nil
     (let [limit page-size offset (-> page-number dec (* page-size))]
       {:limit limit :offset offset})))
+
+(defn parse-string-match
+  "Parses a string into a sqlite `like` form, so it can be matched in a query."
+  [s]
+  (some-> s (str/replace #" " "%") (as-> x (str "%" x "%"))))
 
 (extend-protocol jdbc/IResultSetReadColumn
   java.sql.Timestamp
