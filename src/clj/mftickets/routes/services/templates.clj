@@ -1,12 +1,14 @@
 (ns mftickets.routes.services.templates
-  (:require
-   [mftickets.domain.templates :as domain.templates]
-   [mftickets.domain.templates.sections :as domain.templates.sections]
-   [mftickets.domain.templates.properties :as domain.templates.properties]
-   [mftickets.domain.projects :as domain.projects]
-   [mftickets.domain.users :as domain.users]
-   [mftickets.middleware.context :as middleware.context]
-   [clojure.set]))
+  (:require clojure.set
+            [mftickets.domain.projects :as domain.projects]
+            [mftickets.domain.templates :as domain.templates]
+            [mftickets.inject :refer [inject]]
+            [mftickets.domain.templates.properties :as domain.templates.properties]
+            [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.users :as domain.users]
+            [mftickets.middleware.context :as middleware.context]
+            [mftickets.middleware.pagination :as middleware.pagination]
+            [spec-tools.data-spec :as ds]))
 
 (def err-msg-invalid-project-id "Invalid project-id!")
 (def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
@@ -43,31 +45,36 @@
           (assoc-sections domain.templates.sections/get-sections-for-template)
           (assoc-properties domain.templates.properties/get-properties-for-template)))
 
-(defn- get-project-templates
-  "Get's all templates for a project."
-  [project]
-  (let [templates (domain.templates/get-raw-templates-for-project project)
-        properties-getter (domain.templates.properties/properties-getter templates)
-        sections-getter (domain.templates.sections/sections-getter templates)]
-    (map #(-> % (assoc-sections sections-getter) (assoc-properties properties-getter))
-         templates)))
-
 (defn- wrap-get-template
   "Wrapper that assocs ::template to the request, if found."
   [handler]
   (fn [{{{template-id :id} :path} :parameters :as request}]
-    (let [assoc-template (if-let [template (get-template template-id)] 
-                           #(assoc % ::template template)
-                           identity)]
-      (-> request assoc-template handler))))
+    (let [template (get-template template-id)]
+      (cond-> request
+        template (assoc ::template template)
+        :always  handler))))
 
 (defn handle-get
   [{::keys [template]}]
   (if template {:status 200 :body template} {:status 404}))
 
 (defn handle-get-project-templates
-  [{::middleware.context/keys [project]}]
-  {:status 200 :body (get-project-templates project)})
+  [{::middleware.context/keys [project] :as request}]
+  (let [pagination-data
+        (select-keys request
+                     [::middleware.pagination/page-number
+                      ::middleware.pagination/page-size])
+        
+        opts
+        (assoc pagination-data :project project)
+
+        templates (domain.templates/get-templates-for-project inject opts)
+
+        templates-count (domain.templates/count-templates-for-project project)]
+
+    {:status 200
+     ::middleware.pagination/items templates
+     ::middleware.pagination/total-items-count templates-count}))
 
 (def ^:private wrap-get-project
   [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])
@@ -83,7 +90,11 @@
            :parameters {:path {:id int?}}
            :handler handle-get}}]
    [""
-    {:middleware [[wrap-get-project] [wrap-user-has-access-to-project?]]
+    {:middleware [[middleware.pagination/wrap-pagination-data]
+                  [wrap-get-project]
+                  [wrap-user-has-access-to-project?]]
      :get {:summary "Get's a list of templates for a project."
-           :parameters {:query {:project-id int?}}
+           :parameters {:query {:project-id int?
+                                (ds/opt :pageSize) int?
+                                (ds/opt :pageNumber) int?}}
            :handler handle-get-project-templates}}]])

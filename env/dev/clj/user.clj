@@ -1,17 +1,16 @@
 (ns user
   "Userspace functions you can run by default in your local REPL."
-  (:require
-    [mftickets.config :refer [env]]
-    [clojure.spec.alpha :as s]
-    [expound.alpha :as expound]
-    [mount.core :as mount]
-    [mftickets.core :refer [start-app]]
-    [mftickets.db.core :as db.core]
-    [mftickets.db.prefill :as db.prefill]
-    [conman.core :as conman]
-    [luminus-migrations.core :as migrations]))
+  (:require [clojure.spec.alpha :as spec]
+            [conman.core :as conman]
+            [expound.alpha :as expound]
+            [luminus-migrations.core :as migrations]
+            [mftickets.config :refer [env]]
+            [mftickets.core :refer [start-app]]
+            [mftickets.db.core :as db.core]
+            [mftickets.db.prefill :as db.prefill]
+            [mount.core :as mount]))
 
-(alter-var-root #'s/*explain-out* (constantly expound/printer))
+(alter-var-root #'spec/*explain-out* (constantly expound/printer))
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
@@ -64,3 +63,5 @@
   "Runs all prefills from mftickets.db.prefill"
   []
   (db.prefill/run-prefills! db.core/*db*))
+
+(spec/check-asserts true)

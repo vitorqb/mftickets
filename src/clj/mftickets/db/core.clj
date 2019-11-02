@@ -1,12 +1,19 @@
 (ns mftickets.db.core
-  (:require
-   [clojure.walk :as walk]
-   [clojure.java.jdbc :as jdbc]
-   [conman.core :as conman]
-   [java-time.pre-java8 :as jt]
-   [mount.core :refer [defstate]]
-   [mftickets.config :refer [env]]))
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as spec]
+            [clojure.walk :as walk]
+            [conman.core :as conman]
+            [java-time.pre-java8 :as jt]
+            [mftickets.config :refer [env]]
+            [mftickets.middleware.pagination :as middleware.pagination]
+            [mount.core :refer [defstate]]))
 
+;; Specs
+(spec/def ::pagination-data
+  (spec/keys
+   :req [::middleware.pagination/page-number ::middleware.pagination/page-size]))
+
+;; Functions
 (defstate ^:dynamic *db*
           :start (conman/connect! {:jdbc-url (env :database-url)})
           :stop (conman/disconnect! *db*))
@@ -39,6 +46,19 @@
   "Returns the last inserted id from an sqlite insert."
   [x]
   (get x (keyword "last_insert_rowid()")))
+
+(defn parse-pagination-data
+  "Parses a pagination data (as :mftickets.middleware.pagination/pagination-data) into
+  a map with :limit and :offset, that can be used on pagination."
+  [{::middleware.pagination/keys [page-size page-number] :as data}]
+
+  {:pre [(or (every? nil? [page-size page-number])
+             (spec/assert ::pagination-data data))]}
+
+  (if (nil? page-size)
+    nil
+    (let [limit page-size offset (-> page-number dec (* page-size))]
+      {:limit limit :offset offset})))
 
 (extend-protocol jdbc/IResultSetReadColumn
   java.sql.Timestamp

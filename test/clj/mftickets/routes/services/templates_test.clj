@@ -1,21 +1,21 @@
 (ns mftickets.routes.services.templates-test
-  (:require
-   [com.rpl.specter :as s]
-   [mftickets.routes.services.templates :as sut]
-   [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-   [mftickets.test-utils :as tu]
-   [mftickets.db.core :as db.core]
-   [mftickets.db.prefill :as db.prefill]
-   [mftickets.handler :refer [app]]
-   [mftickets.domain.templates :as domain.templates]
-   [mftickets.domain.templates.sections :as domain.templates.sections]
-   [mftickets.domain.templates.properties :as domain.templates.properties]
-   [mftickets.domain.users :as domain.users]
-   [mftickets.domain.projects :as domain.projects]
-   [mftickets.middleware.auth :as middleware.auth]
-   [mftickets.middleware.context :as middleware.context]
-   [mftickets.utils.kw :as utils.kw]
-   [ring.mock.request :as mock.request]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [com.rpl.specter :as s]
+            [mftickets.db.core :as db.core]
+            [mftickets.db.prefill :as db.prefill]
+            [mftickets.domain.projects :as domain.projects]
+            [mftickets.domain.templates :as domain.templates]
+            [mftickets.domain.templates.properties :as domain.templates.properties]
+            [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.users :as domain.users]
+            [mftickets.handler :refer [app]]
+            [mftickets.middleware.auth :as middleware.auth]
+            [mftickets.middleware.context :as middleware.context]
+            [mftickets.middleware.pagination :as middleware.pagination] 
+            [mftickets.routes.services.templates :as sut]
+            [mftickets.test-utils :as tu]
+            [mftickets.utils.kw :as utils.kw]
+            [ring.mock.request :as mock.request]))
 
 (deftest test-user-has-access-to-template?
 
@@ -211,45 +211,78 @@
                 resp
                 ((app) request)
 
-                body
+                {:keys [page-number page-size total-items-count items] :as body}
                 (tu/decode-response-body resp)]
 
             (testing "Returns 200"
               (is (= 200 (:status resp))))
 
-            (testing "Returns list of templates"
+            (testing "Returns paginated response"
+              (is (= middleware.pagination/default-page-number page-number))
+              (is (= middleware.pagination/default-page-size page-size))
+              (is (= 1 total-items-count)))
+
+            (testing "Returns list of templates inside :items"
               ;; keyword is returned as string
               (let [project-template*
                     (s/transform
                      [:sections s/ALL :properties s/ALL :value-type]
                      utils.kw/full-name
                      project-template)]
-                (is (= [project-template*] body))))))))))
+                (is (= [project-template*] items))))
 
-(deftest test-get-project-templates
-  (let [get-project-templates #'sut/get-project-templates]
+            ;; Now adds another template
+            (tu/gen-save! tu/template {:id 3 :project-id 99})
 
-    (testing "Base"
-      (let [project {:id 1}
-            raw-template {:id 2}
-            sections [{:id 3}]
-            properties [{:id 4 :template-section-id 3}]]
-        (with-redefs [domain.templates/get-raw-templates-for-project
-                      #(when (= % project) [raw-template])
+            (testing "Pagination with more than one items"
+              (let [request
+                    (-> (mock.request/request :get "/api/templates")
+                        (mock.request/query-string {:project-id 99
+                                                    :pageNumber 1
+                                                    :pageSize 1})
+                        (tu/auth-header token))
 
-                      domain.templates.properties/properties-getter
-                      #(when (= % [raw-template]) (constantly properties))
+                    resp
+                    ((app) request)
 
-                      domain.templates.sections/sections-getter
-                      #(when (= % [raw-template]) (constantly sections))]
-
-          (is (= [{:id 2 :sections [{:id 3 :properties properties}]}]
-                 (get-project-templates project))))))))
+                    {:keys [page-number page-size total-items-count items] :as body}
+                    (tu/decode-response-body resp)]
+                (is (= 1 page-number))
+                (is (= 1 page-size))
+                (is (= 1 (count items)))
+                (is (= 2 total-items-count))))))))))
 
 (deftest test-handle-get-project-templates
-  (let [templates [::foo]
-        project ::project
-        templates [::template1 ::template2]]
-    (with-redefs [sut/get-project-templates #(when (= % project) templates)]
-      (is (= {:status 200 :body templates}
-             (sut/handle-get-project-templates {::middleware.context/project project}))))))
+
+  (testing "Base"
+    (let [pagination-data
+          #::middleware.pagination{:page-number 2 :page-size 3}
+          
+          project
+          {:id 9}
+
+          request
+          {::middleware.pagination/page-number 2
+           ::middleware.pagination/page-size 3
+           ::middleware.context/project project}
+
+          templates
+          [{:id 11}]
+
+          templates-count
+          99]
+
+      (with-redefs [domain.templates/get-templates-for-project
+                    (fn [_ opts]
+                      (and (= project (:project opts))
+                           (= 2 (::middleware.pagination/page-number opts))
+                           (= 3 (::middleware.pagination/page-size opts))
+                           templates))
+
+                    domain.templates/count-templates-for-project
+                    (fn [project*] (when (= project project*) templates-count))]
+        
+        (is (= {:status 200
+                ::middleware.pagination/items templates
+                ::middleware.pagination/total-items-count templates-count}
+               (sut/handle-get-project-templates request)))))))
