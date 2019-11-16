@@ -21,3 +21,18 @@
     (fn [template]
       (let [sections-ids (set (s/select [:sections s/ALL :id] template))]
         (s/select [s/ALL #(sections-ids (:template-section-id %))] properties)))))
+
+(defn delete-property!
+  "Deletes a property."
+  [property]
+  (db.templates.properties/delete-property! property))
+
+(defn update-property!
+  "Updates a property"
+  [property]
+  (db.templates.properties/update-property! property))
+
+(defn create-property!
+  "Creates a property"
+  [property]
+  (db.templates.properties/create-property! property))

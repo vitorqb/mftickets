@@ -44,3 +44,58 @@
         (is (= [] (sut/get-properties-for-templates-ids [])))
         (is (= [] (sut/get-properties-for-templates-ids [888])))
         (is (= properties (sut/get-properties-for-templates-ids [0 1 2 3])))))))
+
+(deftest test-get-property
+
+  (tu/with-db
+    (let [property (tu/gen-save! tu/template-section-property {})]
+      (is (= property (sut/get-property (:id property)))))))
+
+(deftest test-delete-property
+
+  (tu/with-db
+    (let [section (tu/gen-save! tu/template-section {})
+          property (tu/gen-save! tu/template-section-property
+                                 {:template-section-id (:id section)})]
+      (is (= [property] (sut/get-properties-for-templates-ids [(:template-id section)])))
+      (sut/delete-property! property)
+      (is (= [] (sut/get-properties-for-templates-ids [(:template-id section)]))))))
+
+(deftest test-update-property
+
+  (tu/with-db
+    (let [raw-property {:id 1
+                        :template-section-id 2
+                        :name "Foo"
+                        :is-multiple true
+                        :value-type :section.property.value.types/text}
+
+          property
+          (tu/gen-save! tu/template-section-property raw-property)
+
+          new-raw-property
+          (assoc raw-property
+                 :template-section-id 3
+                 :name "Bar"
+                 :is-multiple false
+                 :value-type :section.property.value.types/radio)
+
+          _
+          (sut/update-property! new-raw-property)]
+
+      (is (= new-raw-property (sut/get-property 1))))))
+
+
+(deftest test-create-property
+
+  (tu/with-db
+    (let [raw-property {:template-section-id 2
+                        :name "Foo"
+                        :is-multiple true
+                        :value-type :section.property.value.types/text}
+
+          property
+          (sut/create-property! raw-property)]
+
+      (is (= raw-property (dissoc property :id)))
+      (is (int? (:id property))))))

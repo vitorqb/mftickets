@@ -1,17 +1,29 @@
 (ns mftickets.routes.services.templates
-  (:require clojure.set
+  (:require [clojure.core.match :as match]
+            clojure.set
+            [clojure.spec.alpha :as spec]
             [mftickets.domain.projects :as domain.projects]
             [mftickets.domain.templates :as domain.templates]
-            [mftickets.inject :refer [inject]]
             [mftickets.domain.templates.properties :as domain.templates.properties]
             [mftickets.domain.templates.sections :as domain.templates.sections]
             [mftickets.domain.users :as domain.users]
+            [mftickets.inject :refer [inject]]
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
+            [mftickets.routes.services.templates.data-spec :as templates.data-spec]
+            [mftickets.routes.services.templates.validation :as validation]
             [spec-tools.data-spec :as ds]))
 
+;; Const
 (def err-msg-invalid-project-id "Invalid project-id!")
 (def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
+
+;; Helpers
+(defn- validate-raw-new-template
+  "Validates a new template sent by the user to update an old template.
+  Returns either [error-key error-message] or the template."
+  [old-template raw-new-template]
+  (validation/validate-template old-template raw-new-template))
 
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
@@ -77,6 +89,18 @@
      ::middleware.pagination/items templates
      ::middleware.pagination/total-items-count templates-count}))
 
+(defn handle-post
+  [{old-template ::template {raw-new-template :body} :parameters :as r}]
+
+  (match/match (validate-raw-new-template old-template raw-new-template)
+    [err-k err-msg]
+    {:status 400 :body {:error-message err-msg :error-key err-k}}
+
+    new-template
+    (do
+      (domain.templates/update-template! inject old-template new-template)
+      {:status 200 :body (get-template (:id new-template))})))
+
 (def ^:private wrap-get-project
   [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])
 
@@ -89,7 +113,12 @@
     {:middleware [[wrap-get-template] [wrap-user-has-access-to-template?]]
      :get {:summary "Get a template."
            :parameters {:path {:id int?}}
-           :handler handle-get}}]
+           :handler #'handle-get
+           :responses {200 {:body templates.data-spec/template}}}
+     :post {:summary "Post (edit) a template."
+            :parameters {:path {:id int?}
+                         :body templates.data-spec/template}
+            :handler #'handle-post}}]
    [""
     {:middleware [[middleware.pagination/wrap-pagination-data]
                   [wrap-get-project]
@@ -99,4 +128,8 @@
                                 (ds/opt :pageSize) int?
                                 (ds/opt :pageNumber) int?
                                 (ds/opt :name-like) string?}}
-           :handler handle-get-project-templates}}]])
+           :handler #'handle-get-project-templates
+           :responses {200 {:body {:page-number int?
+                                   :page-size int?
+                                   :total-items-count int?
+                                   :items [templates.data-spec/template]}}}}}]])

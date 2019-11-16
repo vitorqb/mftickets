@@ -19,3 +19,19 @@
       (is (= [{:id 1 :template-section-id 2}] (getter (first templates))))
       (is (= [{:id 3 :template-section-id 4}] (getter (second templates))))
       (is (= [] (getter {:id 999 :sections []}))))))
+
+(deftest test-delete-property!
+
+  (with-redefs [db.templates.properties/delete-property! (fn [x] [::delete-property x])]
+    (let [property {:id 1}]
+      (is (= [::delete-property property] (sut/delete-property! property))))))
+
+(deftest test-update-property
+
+  (with-redefs [db.templates.properties/update-property! (fn [x] [::update-property x])]
+    (let [property {:id 1}]
+      (is (= [::update-property property] (sut/update-property! property))))))
+
+(deftest test-create-property
+  (with-redefs [db.templates.properties/create-property! (fn [x] [::create-property x])]
+    (is (= [::create-property {:id 1}] (sut/create-property! {:id 1})))))

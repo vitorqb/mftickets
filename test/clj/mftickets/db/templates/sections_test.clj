@@ -40,3 +40,37 @@
       (testing "Two long"
         (is (= (sut/get-sections-for-templates-ids [1 2])
                (concat template-sections-for-template-1 template-sections-for-template-2)))))))
+
+(deftest test-get-section!
+  (tu/with-db
+    (let [section (tu/gen-save! tu/template-section {})]
+      (is (= section (sut/get-section (:id section)))))))
+
+(deftest test-delete-section!
+
+  (tu/with-db
+    (let [section (tu/gen-save! tu/template-section {})]
+      (is (= [section] (sut/get-sections-for-template {:id (:template-id section)})))
+      (sut/delete-section! section)
+      (is (= [] (sut/get-sections-for-template {:id (:template-id section)}))))))
+
+(deftest test-update-raw-section!
+
+  (tu/with-db
+    (let [section (tu/gen-save! tu/template-section {})
+          new-section {:id (:id section) :template-id 999 :name "Foo Baz 999"}
+          _ (@#'sut/update-raw-section! new-section)]
+
+      (testing "Name is updated"
+        (is (= (:name new-section) (-> section :id sut/get-section :name))))
+
+      (testing "template-id is ignored"
+        (is (= (:template-id section) (-> section :id sut/get-section :template-id)))))))
+
+(deftest test-create-section!
+
+  (let [section {:template-id 999 :name "Foo Bar Baz"}]
+    (tu/with-db
+      (let [created-section (sut/create-section! section)]
+        (is (int? (:id created-section)))
+        (is (= section (dissoc created-section :id)))))))

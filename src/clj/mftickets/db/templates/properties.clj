@@ -32,3 +32,34 @@
           (->> (hash-map :templates-ids))
           get-properties-for-templates-ids*
           (->> (map parse-raw-property))))
+
+(defn get-property
+  [id]
+  (some-> {:id id}
+          get-property*
+          (utils.transform/remapkey :templatesectionid :template-section-id)
+          (utils.transform/remapkey :ismultiple :is-multiple)
+          (utils.transform/remapkey :valuetype :value-type)
+          (update :value-type keyword)
+          (update :is-multiple (comp not zero?))))
+
+(defn delete-property!
+  "Deletes a property from the db."
+  [property]
+  (delete-property!* {:id (:id property)}))
+
+(defn update-property!
+  [property]
+  (-> property
+      (update :value-type #(str (namespace %) "/" (name %)))
+      (update :is-multiple #(if % 1 0))
+      update-property!*))
+
+(defn create-property!
+  [property]
+  (-> property
+      (update :value-type #(str (namespace %) "/" (name %)))
+      (update :is-multiple #(if % 1 0))
+      create-property!*
+      db.core/get-id-from-insert
+      get-property))
