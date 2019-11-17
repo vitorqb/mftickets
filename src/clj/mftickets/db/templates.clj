@@ -34,5 +34,9 @@
     (or (some-> data* count-templates-for-project* :response)
         0)))
 
+(defn update-raw-template!
+  [raw-template]
+  (update-raw-template!* raw-template))
+
 #_(do (require '[hugsql.core :as h])
       (h/def-sqlvec-fns "sql/queries/templates.sql"))

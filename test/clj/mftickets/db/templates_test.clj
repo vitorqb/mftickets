@@ -72,3 +72,20 @@
 
       (testing "Matching none"
         (is (= 0 (sut/count-templates-for-project {:project-id 1 :name-like "zzz"})))))))
+
+(deftest test-update-raw-template!
+
+  (tu/with-db
+    (let [template
+          (tu/gen-save!
+           tu/template
+           {:id 1 :project-id 2 :name "Foo" :creation-date "2019-01-01T22:22:22"})]
+
+      (testing "Updates name and project-id"
+        (sut/update-raw-template! (assoc template :name "Bar" :project-id 99))
+        (is (= "Bar" (-> template sut/get-raw-template :name)))
+        (is (= 99 (-> template sut/get-raw-template :project-id))))
+
+      (testing "Does not update creation-date"
+        (sut/update-raw-template! (assoc template :creation-date "111"))
+        (is (= template (sut/get-raw-template template)))))))

@@ -28,3 +28,9 @@ WHERE projectId = :project-id
 AND name LIKE :value:name-like
 /*~ ) ~*/
 ;
+
+-- :name update-raw-template!* :! :n
+-- :doc Updates the value for a template
+UPDATE templates
+SET projectId = :project-id, name = :name
+WHERE id = :id;

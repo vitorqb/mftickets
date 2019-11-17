@@ -20,3 +20,20 @@
        (hash-map :templates-ids)
        get-sections-for-templates-ids*
        (map #(utils.transform/remapkey % :templateid :template-id))))
+
+(defn get-section
+  [id]
+  (some-> (get-section* {:id id})
+          (utils.transform/remapkey :templateid :template-id)))
+
+(defn delete-section!
+  [section]
+  (delete-section!* {:id (:id section)}))
+
+(defn update-raw-section!
+  [section]
+  (update-raw-section!* section))
+
+(defn create-section!
+  [section]
+  (some-> section create-section!* db.core/get-id-from-insert get-section))

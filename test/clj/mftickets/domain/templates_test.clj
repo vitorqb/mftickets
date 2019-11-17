@@ -2,8 +2,14 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :as t :refer [are deftest is testing use-fixtures]]
             [mftickets.db.core :as db.core]
+            [mftickets.db.templates :as db.templates]
             [mftickets.domain.templates :as sut]
             [mftickets.domain.templates.inject :as domain.templates.inject]
+            [mftickets.domain.templates.properties :as domain.templates.properties]
+            [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.templates.sections.inject
+             :as
+             domain.templates.sections.inject]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.test-utils :as tu]))
 
@@ -146,3 +152,111 @@
                             [raw-template])]
           (is (= expected-templates
                  (sut/get-templates-for-project inject opts))))))))
+
+(deftest test-update-raw-template!
+
+  (let [template {:id 1}
+        update-raw-template! #'sut/update-raw-template!]
+    (with-redefs [db.templates/update-raw-template! (fn [x] [::update-raw-template! x])]
+      (is (= [::update-raw-template! template] (update-raw-template! template))))))
+
+(deftest test-compare-template-sections
+
+  (let [compare-template-sections #'sut/compare-template-sections
+        old-sections [{:id 1} {:id 2}]
+        old-template {:sections old-sections}
+        new-sections [{:id 2} {:id 3}]
+        new-template {:sections new-sections}]
+
+    (testing "Delete..."
+      (is (= [(first old-sections)]
+             (compare-template-sections :delete old-template new-template))))
+
+    (testing "Update..."
+      (is (= [[(second old-sections) (first new-sections)]]
+             (compare-template-sections :update old-template new-template))))
+
+    (testing "Create..."
+      (is (= [(second new-sections)]
+             (compare-template-sections :create old-template new-template))))))
+
+(deftest test-update-template!
+
+  (let [properties [{:id 789
+                     :name "Property"
+                     :template-section-id 456
+                     :value-type :section.property.value.types/radio
+                     :is-multiple false}]
+        sections [{:id 456
+                   :template-id 123
+                   :name "Section"
+                   :properties properties}]
+        new-template {:id 123
+                      :project-id 456
+                      :name "Template"
+                      :creation-date "2019-01-01T00:00:00"
+                      :sections sections}
+        old-template new-template
+        update-section! domain.templates.sections/update-section!
+        create-section! domain.templates.sections/create-section!
+        delete-section! domain.templates.sections/delete-section!
+        create-property! domain.templates.properties/create-property!
+        update-property! domain.templates.properties/update-property!
+        delete-property! domain.templates.properties/delete-property!
+        inject {::domain.templates.inject/update-section! update-section!
+                ::domain.templates.inject/create-section! create-section!
+                ::domain.templates.inject/delete-section! delete-section!
+                ::domain.templates.sections.inject/delete-property! delete-property!
+                ::domain.templates.sections.inject/create-property! create-property!
+                ::domain.templates.sections.inject/update-property! update-property!}]
+
+    (testing "Updates name"
+      (let [new-template (assoc new-template :name "FOO")]
+        (tu/with-db
+          (tu/gen-save! tu/template (dissoc old-template :sections))
+          (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
+          (tu/gen-save! tu/template-section-property (first properties))
+          (sut/update-template! inject old-template new-template)
+          (is (= "FOO" (-> new-template :id sut/get-raw-template :name))))))
+
+    (testing "Removes one section and appends a new one"
+      (let [new-sections [{:template-id 123 :name "000"}]
+            new-template (assoc new-template :sections new-sections)]
+        (tu/with-db
+          (tu/gen-save! tu/template (dissoc old-template :sections))
+          (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
+          (tu/gen-save! tu/template-section-property (first properties))
+          (sut/update-template! inject old-template new-template)
+          (let [new-sections* (domain.templates.sections/get-sections-for-template new-template)]
+            (is (= 1 (count new-sections*)))
+            (is (= (first new-sections) (-> new-sections* first (dissoc :id)))))
+          (is (= [] (domain.templates.properties/get-properties-for-template new-template))))))
+
+    (testing "Removes one property and appends a new one"
+      (let [new-properties [{:name "New Property"
+                             :template-section-id 456
+                             :value-type :section.property.value.types/text
+                             :is-multiple true}]
+            new-sections [(-> sections first (assoc :properties new-properties))]
+            new-template (assoc new-template :sections new-sections)]
+        (tu/with-db
+          (tu/gen-save! tu/template (dissoc old-template :sections))
+          (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
+          (tu/gen-save! tu/template-section-property (first properties))
+          (sut/update-template! inject old-template new-template)
+          (let [new-properties* (domain.templates.properties/get-properties-for-template new-template)]
+            (is (= 1 (count new-properties*)))
+            (is (= (first new-properties)
+                   (-> new-properties* first (dissoc :id))))))))
+
+    (testing "Renames one property"
+      (let [new-properties [(-> properties first (assoc :name "New Porperty Name"))]
+            new-sections [(-> sections first (assoc :properties new-properties))]
+            new-template (assoc new-template :sections new-sections)]
+        (tu/with-db
+          (tu/gen-save! tu/template (dissoc old-template :sections))
+          (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
+          (tu/gen-save! tu/template-section-property (first properties))
+          (sut/update-template! inject old-template new-template)
+          (is (= new-properties
+                 (domain.templates.properties/get-properties-for-template new-template))))))))
