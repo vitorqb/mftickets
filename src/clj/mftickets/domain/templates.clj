@@ -38,10 +38,16 @@
    #(conj % property)
    template))
 
+(defn- ensure-template-properties-are-vectors
+  [template]
+  (s/transform [:sections s/ALL :properties] vec template))
+
 (defn assoc-properties-to-template
   "Assocs a sequence of properties to a template's sections."
   [template properties]
-  (into {} (reduce assoc-property-to-template template properties)))
+  (->> properties
+       (reduce assoc-property-to-template template)
+       (ensure-template-properties-are-vectors)))
 
 (defn assoc-sections-to-template
   "Assocs a sequence of sections to a template."

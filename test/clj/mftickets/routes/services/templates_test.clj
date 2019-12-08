@@ -129,7 +129,8 @@
                                          {:id 1 :template-section-id 10}]}
                            {:id 11
                             :properties [{:id 3 :template-section-id 11}]}
-                           {:id 12}]}
+                           {:id 12
+                            :properties []}]}
                (assoc-properties template property-getter)))))))
 
 (deftest test-get-template

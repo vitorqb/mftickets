@@ -87,6 +87,23 @@
       (is (= {:sections [{:id 1} {:id 2 :properties [{:id 11 :template-section-id 2} property]}]}
              (sut/assoc-property-to-template template property))))))
 
+(deftest test-assoc-properties-to-template
+
+  (testing "Assocs empty vector if no properties"
+    (let [section {:id 1}
+          template {:id 2 :sections [section]}
+          properties []]
+      (is (= (assoc template :sections [(assoc section :properties [])])
+             (sut/assoc-properties-to-template template properties)))))
+
+  (testing "Assoc properties"
+    (let [property {:id 1 :template-section-id 2}
+          section {:id 2}
+          template {:id 3 :sections [section]}
+          section-with-property (assoc section :properties [property])
+          template-with-property (assoc template :sections [section-with-property])]
+      (is (= template-with-property (sut/assoc-properties-to-template template [property]))))))
+
 (deftest test-assoc-sections-to-template
 
   (testing "Base"
