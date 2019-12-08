@@ -27,11 +27,10 @@
   Returns the value of the last applied fun.
   If the keyword `::<` is found in args, it is substituted by the current value.
   The check is done view clojure.walk/postwalk."
-  [[fun & args] & funs-args]
-  (let [result (atom nil)
-        fun-args* (concat [(apply vector fun args)] funs-args)]
+  [& funs-args]
+  (let [result (atom nil)]
     (conman/with-transaction [*db*]
-      (doseq [[fun** & args*] fun-args*
+      (doseq [[fun** & args*] funs-args
               :let [args** (walk/postwalk #(if (= % ::<) @result %) args*)]]
         (reset! result (apply fun** args**))))
     @result))
