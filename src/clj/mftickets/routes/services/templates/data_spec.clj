@@ -8,11 +8,11 @@
    :name string?
    :creation-date string?
    :sections
-   [{(ds/opt :id) int?
+   [{(ds/opt :id) (spec/or :int int? :nil nil?)
      :template-id int?
      :name string?
      :properties
-     [{:id (spec/or :int int? :nil nil?)
+     [{(ds/opt :id) (spec/or :int int? :nil nil?)
        :template-section-id int?
        :name string?
        :is-multiple boolean?

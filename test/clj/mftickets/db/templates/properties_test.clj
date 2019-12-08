@@ -9,6 +9,10 @@
     (tu/with-db
       (is (= [] (sut/get-properties-for-template {:id 1})))))
 
+  (testing "Empty (unkown id)"
+    (tu/with-db
+      (is (= [] (sut/get-properties-for-template {:id 999})))))
+
   (testing "Base"
     (tu/with-db
       (tu/gen-save! tu/template-section {:id 1})

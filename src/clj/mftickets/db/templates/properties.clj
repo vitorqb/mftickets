@@ -19,11 +19,9 @@
 (defn get-properties-for-template
   "Returns all properties for a template."
   [template]
-  (some-> template
-          (select-keys [:id])
-          (utils.transform/remapkey :id :template-id)
-          get-properties-for-template*
-          (->> (map parse-raw-property))))
+  (some->> {:template-id (:id template)}
+           get-properties-for-template*
+           (map parse-raw-property)))
 
 (defn get-properties-for-templates-ids
   "Returns all properties for a list of templates ids"
