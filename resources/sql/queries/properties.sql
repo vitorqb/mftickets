@@ -10,6 +10,17 @@ FROM templateSectionProperties as properties
 JOIN templateSections ON templateSections.id = properties.templateSectionId
 WHERE templateSections.templateId = :template-id;
 
+-- :name get-properties-for-section* :result :*
+-- :doc Gets all properties for a section
+SELECT
+  properties.id,
+  properties.templateSectionId,
+  properties.name,
+  properties.isMultiple,
+  properties.valueType
+  FROM templateSectionProperties as properties
+WHERE properties.templateSectionId = :section-id;
+
 -- :name get-property* :result :1
 -- :doc Gets a properties by id
 SELECT

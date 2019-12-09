@@ -132,7 +132,7 @@
         (compare-template-sections :create old-template new-template)
 
         sections-to-create-ef
-        (mapv (fn [s] [create-section! s]) sections-to-create)
+        (mapv (fn [s] [create-section! inject s]) sections-to-create)
 
         sections-to-update
         (compare-template-sections :update old-template new-template)

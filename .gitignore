@@ -16,3 +16,4 @@ profiles.clj
 /log
 /mftickets_dev.db
 /mftickets_test.db
+/.dir-locals.el
