@@ -49,6 +49,19 @@
         (is (= [] (sut/get-properties-for-templates-ids [888])))
         (is (= properties (sut/get-properties-for-templates-ids [0 1 2 3])))))))
 
+(deftest test-get-properties-for-section
+
+  (testing "Empty"
+    (tu/with-db
+      (is (= [] (sut/get-properties-for-section {:id 999})))))
+
+  (testing "Base"
+    (tu/with-db
+      (let [section (tu/gen-save! tu/template-section)
+            property-args {:template-section-id (:id section)}
+            property (tu/gen-save! tu/template-section-property property-args)]
+        (is (= [property] (sut/get-properties-for-section section)))))))
+
 (deftest test-get-property
 
   (tu/with-db

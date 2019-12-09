@@ -36,4 +36,7 @@
    ::domain.templates.sections.inject/delete-property!
    domain.templates.properties/delete-property!
 
+   ::domain.templates.sections.inject/get-properties-for-section
+   domain.templates.properties/get-properties-for-section
+
    })

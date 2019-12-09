@@ -220,12 +220,15 @@
         create-property! domain.templates.properties/create-property!
         update-property! domain.templates.properties/update-property!
         delete-property! domain.templates.properties/delete-property!
+        get-properties-for-section domain.templates.properties/get-properties-for-section
         inject {::domain.templates.inject/update-section! update-section!
                 ::domain.templates.inject/create-section! create-section!
                 ::domain.templates.inject/delete-section! delete-section!
                 ::domain.templates.sections.inject/delete-property! delete-property!
                 ::domain.templates.sections.inject/create-property! create-property!
-                ::domain.templates.sections.inject/update-property! update-property!}]
+                ::domain.templates.sections.inject/update-property! update-property!
+                ::domain.templates.sections.inject/get-properties-for-section
+                get-properties-for-section}]
 
     (testing "Updates name"
       (let [new-template (assoc new-template :name "FOO")]

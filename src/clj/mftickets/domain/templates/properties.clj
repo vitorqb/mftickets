@@ -13,6 +13,9 @@
   [template]
   (db.templates.properties/get-properties-for-templates-ids (map :id template)))
 
+(defn get-properties-for-section [section]
+  (db.templates.properties/get-properties-for-section section))
+
 (defn properties-getter
   "Given a list of templates, returns a getter fn for the template properties."
   [templates]

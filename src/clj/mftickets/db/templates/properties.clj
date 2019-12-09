@@ -31,6 +31,9 @@
           get-properties-for-templates-ids*
           (->> (map parse-raw-property))))
 
+(defn get-properties-for-section [{id :id}]
+  (some->> {:section-id id} get-properties-for-section* (map parse-raw-property)))
+
 (defn get-property
   [id]
   (some-> {:id id}

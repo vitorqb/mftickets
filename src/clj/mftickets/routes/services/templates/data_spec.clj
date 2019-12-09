@@ -13,7 +13,7 @@
      :name string?
      :properties
      [{(ds/opt :id) (spec/or :int int? :nil nil?)
-       :template-section-id int?
+       (ds/opt :template-section-id) (spec/or :int int? :nil nil?)
        :name string?
        :is-multiple boolean?
        :value-type keyword?}]}]})
