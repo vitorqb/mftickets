@@ -7,6 +7,7 @@
             [mftickets.domain.templates.properties :as domain.templates.properties]
             [mftickets.domain.templates.sections :as domain.templates.sections]
             [mftickets.domain.users :as domain.users]
+            [mftickets.http.responses :as http.responses]
             [mftickets.inject :refer [inject]]
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
@@ -22,12 +23,19 @@
 (def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
 
 ;; Helpers
-(defn- validate-new-template
+(defn- validate-template-update
   "Validates a new template sent by the user to update an old template.
-  Returns either [error-key error-message] or the template."
+  Returns either [error-key error-message] or :validation/success."
   [old-template new-template]
   (let [validation-args {:old-template old-template :new-template new-template}]
     (validation/validate templates.validation.update/validations validation-args)))
+
+(defn- validate-new-template
+  "Validates a new template sent by the user to be created.
+   Returns either [error-key error-message] or :validation/success."
+  [new-template]
+  ;; as of now, there is no need for validation other than the specs themselves.
+  :validation/success)
 
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
@@ -96,14 +104,25 @@
 (defn handle-post
   [{old-template ::template {new-template :body} :parameters :as r}]
 
-  (match/match (validate-new-template old-template new-template)
-    [err-k err-msg]
-    {:status 400 :body {:error-message err-msg :error-key err-k}}
-
+  (match/match (validate-template-update old-template new-template)
     :validation/success
     (do
       (domain.templates/update-template! inject old-template new-template)
-      {:status 200 :body (get-template (:id new-template))})))
+      {:status 200 :body (get-template (:id new-template))})
+    
+    err
+    (http.responses/validation-error err)))
+
+(defn handle-creation-post
+  "Handlers a POST aiming at creating a new template."
+  [{{new-template :body} :parameters}]
+
+  (match/match (validate-new-template new-template)
+    :validation/success
+    {:status 200 :body (domain.templates/create-template! inject new-template)}
+
+    err
+    (http.responses/validation-error err)))
 
 (def ^:private wrap-get-project
   [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])
@@ -136,4 +155,8 @@
            :responses {200 {:body {:page-number int?
                                    :page-size int?
                                    :total-items-count int?
-                                   :items [templates.data-spec/template]}}}}}]])
+                                   :items [templates.data-spec/template]}}}}
+     :post {:summary "Creates a template for a project"
+            :parameters {:query {:project-id int?}
+                         :body templates.data-spec/create-template}
+            :handler #'handle-creation-post}}]])

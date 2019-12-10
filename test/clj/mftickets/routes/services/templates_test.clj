@@ -9,6 +9,8 @@
             [mftickets.domain.templates.sections :as domain.templates.sections]
             [mftickets.domain.users :as domain.users]
             [mftickets.handler :refer [app]]
+            [mftickets.http.responses :as http.responses]
+            [mftickets.inject :refer [inject]]
             [mftickets.middleware.auth :as middleware.auth]
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
@@ -20,51 +22,51 @@
             [mftickets.utils.kw :as utils.kw]
             [ring.mock.request :as mock.request]))
 
-(deftest test-validate-new-template
+(deftest test-validate-template-update
 
   (let [old-template {:id 1
                       :project-id 1
                       :name "foo"
                       :creation-date "2019-01-01T00:00:00"
                       :sections []}
-        validate-new-template #'sut/validate-new-template]
+        validate-template-update #'sut/validate-template-update]
 
     (testing "Valid if equal"
       (let [new-template old-template]
-        (is (= :validation/success (validate-new-template old-template new-template)))))
+        (is (= :validation/success (validate-template-update old-template new-template)))))
 
     (testing "Valid and not equal"
       (let [new-sections [{:id 2 :template-id 1 :properties [{:template-section-id 2}]}]
             new-name "BAR"
             new-template (assoc old-template :name new-name :sections new-sections)]
-        (is (= :validation/success (validate-new-template old-template new-template)))))
+        (is (= :validation/success (validate-template-update old-template new-template)))))
 
     (testing "Invalid..."
 
       (testing "Project id does not match"
         (let [new-template (assoc old-template :project-id 2)
-              result (validate-new-template old-template new-template)]
+              result (validate-template-update old-template new-template)]
           (is (= ::templates.validation.update/project-id-missmatch (first result)))))
 
       (testing "Id does not match"
         (let [new-template (assoc old-template :id 2)
-              result (validate-new-template old-template new-template)]
+              result (validate-template-update old-template new-template)]
           (is (= ::templates.validation.update/id-missmatch (first result)))))
 
       (testing "Section id does not match"
         (let [new-template (assoc-in old-template [:sections 0] {:template-id 2})
-              result (validate-new-template old-template new-template)]
+              result (validate-template-update old-template new-template)]
           (is (= ::templates.validation.update/section-template-id-missmatch (first result)))))
 
       (testing "Section Property id does not match"
         (let [sections [{:id 9 :template-id 1 :properties [{:template-section-id 8}]}]
               new-template (assoc old-template :sections sections)
-              result (validate-new-template old-template new-template)]
+              result (validate-template-update old-template new-template)]
           (is (= ::templates.validation.update/property-section-id-missmatch (first result)))))
 
       (testing "Created at does not match"
         (let [new-template (assoc old-template :creation-date "2000-01-12T00:11:00")
-              result (validate-new-template old-template new-template)]
+              result (validate-template-update old-template new-template)]
           (is (= ::templates.validation.update/created-at-missmatch (first result))))))))
 
 (deftest test-user-has-access-to-template?
@@ -397,6 +399,101 @@
                          ((app))
                          (tu/decode-response-body)))))))))))
 
+(deftest test-integration-create-template
+
+  (testing "Success requests: "
+    (tu/with-db
+      (tu/with-app
+        (tu/with-user-and-token [user token]
+          (let [project
+                (tu/gen-save! tu/project)
+
+                _
+                (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id (:id project)})
+
+                property
+                {:id nil
+                 :template-section-id nil
+                 :name "Foo Property"
+                 :is-multiple false
+                 :value-type :section.property.value.types/text}
+
+                section
+                {:id nil
+                 :template-id nil
+                 :name "Foo Section"
+                 :properties [property]}
+
+                new-template
+                {:id nil
+                 :project-id (:id project)
+                 :name "Foo"
+                 :creation-date nil
+                 :sections [section]}
+
+                request
+                (-> (mock.request/request :post "/api/templates")
+                    (mock.request/query-string {:project-id (:id project)})
+                    (mock.request/json-body new-template)
+                    (tu/auth-header token))
+
+                response
+                ((app) request)
+
+                body
+                (tu/decode-response-body response)]
+
+            (testing "Returns body with... "
+
+              (testing "Id"
+                (is (int? (:id body))))
+
+              (testing "project-id"
+                (is (= (:id project) (:project-id body))))
+
+              (testing "name"
+                (is (= (:name new-template) (:name body))))
+
+              (testing "creation-date"
+                (is (string? (:creation-date body))))
+
+              (testing "sections... "
+
+                (testing "A single one"
+                  (is (= 1 (-> body :sections count))))
+
+                (testing "id"
+                  (is (int? (-> body :sections first :id))))
+
+                (testing "template-id"
+                  (is (= (:id body) (-> body :sections first :template-id))))
+
+                (testing "name"
+                  (is (= (:name section) (-> body :sections first :name))))
+
+                (testing "properties..."
+
+                  (testing "A single one"
+                    (is (= 1 (-> body :sections first :properties count))))
+
+                  (testing "id"
+                    (is (int? (-> body :sections first :properties first :id))))
+
+                  (testing "template-section-id"
+                    (is (= (-> body :sections first :id)
+                           (-> body :sections first :properties first :template-section-id))))
+
+                  (testing "name"
+                    (is (= (:name property) (-> body :sections first :properties first :name))))
+
+                  (testing "is-multiple"
+                    (is (= (:is-multiple property)
+                           (-> body :sections first :properties first :is-multiple))))
+
+                  (testing "value-type"
+                    (is (= (-> property :value-type utils.kw/full-name)
+                           (-> body :sections first :properties first :value-type)))))))))))))
+
 (deftest test-handle-get-project-templates
 
   (testing "Base"
@@ -442,7 +539,7 @@
   (testing "Fails if invalid template..."
     (let [new-template {:id 1 :name "foo"}
           error [::invalid-name "The name is invalid."]]
-      (with-redefs [sut/validate-new-template (constantly error)]
+      (with-redefs [sut/validate-template-update (constantly error)]
         (let [result (sut/handle-post {:parameters {:body new-template}})]
 
           (testing "Returns 400"
@@ -460,7 +557,7 @@
                     :sections []}
           new-template (assoc template :name "Foo")]
 
-      (with-redefs [sut/validate-new-template (constantly :validation/success)
+      (with-redefs [sut/validate-template-update (constantly :validation/success)
                     domain.templates/update-template! (constantly nil)
                     sut/get-template (constantly new-template)]
         (let [result (sut/handle-post {:parameters {:body new-template}})]
@@ -470,3 +567,37 @@
 
           (testing "Returns the new template on the body"
             (is (= new-template (:body result)))))))))
+
+(deftest test-handler-creation-post
+
+  (let [new-template {:id nil
+                      :project-id 1
+                      :name "Foo"
+                      :creation-date nil
+                      :sections []}
+        request {:parameters {:body new-template}}]
+
+    (testing "Returns validation error if validation fails"
+      (let [validation-error [::err "Err"]]
+        (with-redefs [sut/validate-new-template (constantly validation-error)]
+          (is (= (http.responses/validation-error validation-error)
+                 (sut/handle-creation-post request))))))
+
+    (testing "Calls create-template! on success"
+      (let [calls (atom [])]
+        (with-redefs [domain.templates/create-template!
+                      (fn [x y] (swap! calls conj [::create-template x y]))
+                      sut/validate-new-template (constantly :validation/success)]
+          (sut/handle-creation-post request)
+          (is (= [[::create-template inject new-template]] @calls)))))
+
+    (testing "On success, returns..."
+      (with-redefs [domain.templates/create-template! (constantly ::new-template)
+                    sut/validate-new-template (constantly :validation/success)]
+        (let [response (sut/handle-creation-post request)]
+
+          (testing "200"
+            (is (= 200 (:status response))))
+
+          (testing "The new template as body"
+            (is (= ::new-template (:body response)))))))))

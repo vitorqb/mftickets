@@ -34,3 +34,8 @@ AND name LIKE :value:name-like
 UPDATE templates
 SET projectId = :project-id, name = :name
 WHERE id = :id;
+
+-- :name create-template!* :insert :raw
+-- :doc Creates a template.
+INSERT INTO templates (name, projectId, creationDate)
+VALUES (:name, :project-id, :creation-date);

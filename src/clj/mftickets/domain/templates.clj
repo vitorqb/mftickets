@@ -144,3 +144,34 @@
     (apply db.core/run-effects!
            [update-raw-template! new-template]
            (concat sections-to-create-ef sections-to-delete-ef sections-to-update-ef))))
+
+(defn get-template
+  "Get's a template by id using the injected functions."
+  [{::domain.templates.inject/keys [get-sections-for-templates get-properties-for-templates]}
+   id]
+
+  {:pre [(ifn? get-sections-for-templates) (ifn? get-properties-for-templates)]}
+
+  (let [raw-template (get-raw-template id)]
+    (raw-template->template
+     raw-template
+     (get-properties-for-templates [raw-template])
+     (get-sections-for-templates [raw-template]))))
+
+(defn create-sections-for-new-template
+  "Creates all sections for a newly-created template.
+  Returns the entire template saved, including the sections."
+  [{::domain.templates.inject/keys [create-section!] :as inject} sections created-template]
+
+  {:pre [(ifn? create-section!)]}
+  
+  (let [sections* (map #(assoc % :template-id (:id created-template)) sections)
+        effects (map (fn [s] [create-section! inject s]) sections*)
+        effects (concat effects [[get-template inject (:id created-template)]])]
+    (apply db.core/run-effects! effects)))
+
+(defn create-template!
+  [inject new-template]
+  (db.core/run-effects!
+   [db.templates/create-template! new-template]
+   [create-sections-for-new-template inject (:sections new-template) ::db.core/<]))
