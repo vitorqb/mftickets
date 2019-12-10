@@ -11,7 +11,10 @@
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.routes.services.templates.data-spec :as templates.data-spec]
-            [mftickets.routes.services.templates.validation :as validation]
+            [mftickets.routes.services.templates.validation.update
+             :as
+             templates.validation.update]
+            [mftickets.validation.core :as validation]
             [spec-tools.data-spec :as ds]))
 
 ;; Const
@@ -19,11 +22,12 @@
 (def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
 
 ;; Helpers
-(defn- validate-raw-new-template
+(defn- validate-new-template
   "Validates a new template sent by the user to update an old template.
   Returns either [error-key error-message] or the template."
-  [old-template raw-new-template]
-  (validation/validate-template old-template raw-new-template))
+  [old-template new-template]
+  (let [validation-args {:old-template old-template :new-template new-template}]
+    (validation/validate templates.validation.update/validations validation-args)))
 
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
@@ -90,13 +94,13 @@
      ::middleware.pagination/total-items-count templates-count}))
 
 (defn handle-post
-  [{old-template ::template {raw-new-template :body} :parameters :as r}]
+  [{old-template ::template {new-template :body} :parameters :as r}]
 
-  (match/match (validate-raw-new-template old-template raw-new-template)
+  (match/match (validate-new-template old-template new-template)
     [err-k err-msg]
     {:status 400 :body {:error-message err-msg :error-key err-k}}
 
-    new-template
+    :validation/success
     (do
       (domain.templates/update-template! inject old-template new-template)
       {:status 200 :body (get-template (:id new-template))})))

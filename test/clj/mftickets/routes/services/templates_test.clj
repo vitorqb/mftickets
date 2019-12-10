@@ -13,57 +13,59 @@
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.routes.services.templates :as sut]
-            [mftickets.routes.services.templates.validation :as validation]
+            [mftickets.routes.services.templates.validation.update
+             :as
+             templates.validation.update]
             [mftickets.test-utils :as tu]
             [mftickets.utils.kw :as utils.kw]
             [ring.mock.request :as mock.request]))
 
-(deftest test-validate-raw-new-template
+(deftest test-validate-new-template
 
   (let [old-template {:id 1
                       :project-id 1
                       :name "foo"
                       :creation-date "2019-01-01T00:00:00"
                       :sections []}
-        validate-raw-new-template #'sut/validate-raw-new-template]
+        validate-new-template #'sut/validate-new-template]
 
     (testing "Valid if equal"
       (let [new-template old-template]
-        (is (= new-template (validate-raw-new-template old-template new-template)))))
+        (is (= :validation/success (validate-new-template old-template new-template)))))
 
     (testing "Valid and not equal"
       (let [new-sections [{:id 2 :template-id 1 :properties [{:template-section-id 2}]}]
             new-name "BAR"
             new-template (assoc old-template :name new-name :sections new-sections)]
-        (is (= new-template (validate-raw-new-template old-template new-template)))))
+        (is (= :validation/success (validate-new-template old-template new-template)))))
 
     (testing "Invalid..."
 
       (testing "Project id does not match"
-        (let [new-template (assoc old-template :project-id 2)]
-          (is (= validation/project-id-missmatch
-                 (validate-raw-new-template old-template new-template)))))
+        (let [new-template (assoc old-template :project-id 2)
+              result (validate-new-template old-template new-template)]
+          (is (= ::templates.validation.update/project-id-missmatch (first result)))))
 
       (testing "Id does not match"
-        (let [new-template (assoc old-template :id 2)]
-          (is (= validation/id-missmatch
-                 (validate-raw-new-template old-template new-template)))))
+        (let [new-template (assoc old-template :id 2)
+              result (validate-new-template old-template new-template)]
+          (is (= ::templates.validation.update/id-missmatch (first result)))))
 
       (testing "Section id does not match"
-        (let [new-template (assoc-in old-template [:sections 0] {:template-id 2})]
-          (is (= validation/section-template-id-missmatch
-                 (validate-raw-new-template old-template new-template)))))
+        (let [new-template (assoc-in old-template [:sections 0] {:template-id 2})
+              result (validate-new-template old-template new-template)]
+          (is (= ::templates.validation.update/section-template-id-missmatch (first result)))))
 
       (testing "Section Property id does not match"
         (let [sections [{:id 9 :template-id 1 :properties [{:template-section-id 8}]}]
-              new-template (assoc old-template :sections sections)]
-          (is (= validation/property-section-id-missmatch
-                 (validate-raw-new-template old-template new-template)))))
+              new-template (assoc old-template :sections sections)
+              result (validate-new-template old-template new-template)]
+          (is (= ::templates.validation.update/property-section-id-missmatch (first result)))))
 
       (testing "Created at does not match"
-        (let [new-template (assoc old-template :creation-date "2000-01-12T00:11:00")]
-          (is (= validation/created-at-missmatch
-                 (validate-raw-new-template old-template new-template))))))))
+        (let [new-template (assoc old-template :creation-date "2000-01-12T00:11:00")
+              result (validate-new-template old-template new-template)]
+          (is (= ::templates.validation.update/created-at-missmatch (first result))))))))
 
 (deftest test-user-has-access-to-template?
 
@@ -438,10 +440,10 @@
 (deftest test-handle-post
 
   (testing "Fails if invalid template..."
-    (let [raw-new-template {:id 1 :name "foo"}
+    (let [new-template {:id 1 :name "foo"}
           error [::invalid-name "The name is invalid."]]
-      (with-redefs [sut/validate-raw-new-template (constantly error)]
-        (let [result (sut/handle-post {:parameters {:body raw-new-template}})]
+      (with-redefs [sut/validate-new-template (constantly error)]
+        (let [result (sut/handle-post {:parameters {:body new-template}})]
 
           (testing "Returns 400"
             (is (= 400 (:status result))))
@@ -456,15 +458,15 @@
                     :name "foo"
                     :creation-date "2019-01-01T00:00:00"
                     :sections []}
-          raw-new-template (assoc template :name "Foo")]
+          new-template (assoc template :name "Foo")]
 
-      (with-redefs [sut/validate-raw-new-template (constantly raw-new-template)
+      (with-redefs [sut/validate-new-template (constantly :validation/success)
                     domain.templates/update-template! (constantly nil)
-                    sut/get-template (constantly raw-new-template)]
-        (let [result (sut/handle-post {:parameters {:body raw-new-template}})]
+                    sut/get-template (constantly new-template)]
+        (let [result (sut/handle-post {:parameters {:body new-template}})]
 
           (testing "Returns 200"
             (is (= 200 (:status result))))
 
           (testing "Returns the new template on the body"
-            (is (= raw-new-template (:body result)))))))))
+            (is (= new-template (:body result)))))))))
