@@ -1,9 +1,9 @@
 (ns mftickets.db.templates
-  (:require
-   [mftickets.db.core :as db.core]
-   [conman.core :as conman]
-   [mftickets.utils.transform :as utils.transform]
-   [mftickets.middleware.pagination :as middleware.pagination]))
+  (:require [conman.core :as conman]
+            [mftickets.db.core :as db.core]
+            [mftickets.middleware.pagination :as middleware.pagination]
+            [mftickets.utils.date-time :as utils.date-time]
+            [mftickets.utils.transform :as utils.transform]))
 
 (conman/bind-connection db.core/*db* "sql/queries/templates.sql")
 
@@ -37,6 +37,15 @@
 (defn update-raw-template!
   [raw-template]
   (update-raw-template!* raw-template))
+
+(defn create-template!
+  "Creates a template. Does not create any other related object."
+  [raw-template]
+  (-> raw-template
+      (assoc :creation-date (utils.date-time/now-as-str))
+      create-template!*
+      db.core/get-id-from-insert
+      (as-> x (get-raw-template {:id x}))))
 
 #_(do (require '[hugsql.core :as h])
       (h/def-sqlvec-fns "sql/queries/templates.sql"))

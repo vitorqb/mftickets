@@ -280,3 +280,52 @@
           (sut/update-template! inject old-template new-template)
           (is (= new-properties
                  (domain.templates.properties/get-properties-for-template new-template))))))))
+
+(deftest test-get-template
+  (let [template {:id 1}
+        sections [{:id 2}]
+        get-sections (constantly sections)
+        properties [{:id 3}]
+        get-properties (constantly properties)
+        inject {::domain.templates.inject/get-sections-for-templates get-sections
+                ::domain.templates.inject/get-properties-for-templates get-properties}]
+    (with-redefs [sut/get-raw-template (constantly template)
+                  sut/raw-template->template (fn [& xs] [::->template xs])]
+      (is (= [::->template [template properties sections]]
+             (sut/get-template inject (:id template)))))))
+
+(deftest test-create-sections-for-new-template
+
+  (with-redefs [db.core/run-effects! (fn [& xs] xs)]
+
+    (let [create-section! #(do ::create-section)
+          inject {::domain.templates.inject/create-section! create-section!}
+          created-template {:id 1}]
+
+      (testing "Empty"
+        (is (= [[sut/get-template inject (:id created-template)]]
+               (sut/create-sections-for-new-template inject [] created-template))))
+
+      (testing "Two sections"
+        (let [section1 {:id 1}
+              section2 {:id 2}
+              sections [section1 section2]]
+          (is (= [[create-section! inject (assoc section1 :template-id (:id created-template))]
+                  [create-section! inject (assoc section2 :template-id (:id created-template))]
+                  [sut/get-template inject (:id created-template)]]
+                 (sut/create-sections-for-new-template inject sections created-template))))))))
+
+(deftest test-create-template!
+
+  (with-redefs [db.core/run-effects! (fn [& xs] xs)]
+
+    (let [template {:id 1 :sections {:id 2}}
+          inject {::foo 1}]
+
+      (testing "Calls db create template"
+        (is (= [db.templates/create-template! template]
+               (->> template (sut/create-template! inject) first))))
+
+      (testing "Calls create-new-template-sections"
+        (is (= [sut/create-sections-for-new-template inject (:sections template) ::db.core/<]
+               (->> template (sut/create-template! inject) second)))))))

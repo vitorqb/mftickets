@@ -1,6 +1,15 @@
 (ns mftickets.routes.services.templates.data-spec
   (:require [clojure.spec.alpha :as spec]
-            [spec-tools.data-spec :as ds]))
+            [com.rpl.specter :as s]
+            [com.rpl.specter.protocols]
+            [spec-tools.data-spec :as ds])
+  (:import [spec_tools.data_spec OptionalKey]))
+
+(defn- select-key-eq [[k1 _] k2] (= k1 k2))
+
+(extend-type OptionalKey
+  com.rpl.specter.protocols/ImplicitNav
+  (implicit-nav [this] (-> this :k com.rpl.specter.protocols/implicit-nav)))
 
 (def template
   {:id int?
@@ -17,3 +26,12 @@
        :name string?
        :is-multiple boolean?
        :value-type keyword?}]}]})
+
+(def create-template
+  (->> template
+       (s/setval :id nil?)
+       (s/setval :creation-date nil?)
+       (s/setval [:sections s/FIRST (ds/opt :id)] nil?)
+       (s/setval [:sections s/FIRST (ds/opt :template-id)] nil?)
+       (s/setval [:sections s/FIRST :properties s/FIRST (ds/opt :id)] nil?)
+       (s/setval [:sections s/FIRST :properties s/FIRST (ds/opt :template-section-id)] nil?)))

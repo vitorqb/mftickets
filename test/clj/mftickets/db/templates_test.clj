@@ -1,9 +1,10 @@
 (ns mftickets.db.templates-test
-  (:require [mftickets.db.templates :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.db.core :as db.core]
+            [mftickets.db.templates :as sut]
             [mftickets.test-utils :as tu]
-            [clojure.java.jdbc :as jdbc]
-            [mftickets.db.core :as db.core]))
+            [mftickets.utils.date-time :as utils.date-time]))
 
 (deftest test-get-raw-template
 
@@ -89,3 +90,27 @@
       (testing "Does not update creation-date"
         (sut/update-raw-template! (assoc template :creation-date "111"))
         (is (= template (sut/get-raw-template template)))))))
+
+(deftest test-create-template!
+
+  (let [now "1993-11-23T22:11:00"
+        template {:id nil
+                  :project-id 1
+                  :name "Foo"
+                  :creation-date nil
+                  :sections []}]
+    (with-redefs [utils.date-time/now-as-str (constantly now)]
+      (tu/with-db
+        (let [response (sut/create-template! template)]
+
+          (testing "Returns the same as if I get the template"
+            (is (= response (sut/get-raw-template {:id (:id response)}))))
+
+          (testing "Returns correct project-id"
+            (is (= (:project-id template) (:project-id response))))
+
+          (testing "Returns correct name"
+            (is (= (:name template) (:name response))))
+
+          (testing "Returns correct creation date"
+            (is (= now (:creation-date response)))))))))
