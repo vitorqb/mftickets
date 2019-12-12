@@ -47,5 +47,12 @@
       db.core/get-id-from-insert
       (as-> x (get-raw-template {:id x}))))
 
+(defn unique-template-name-for-project?
+  [name project-id]
+  (-> {:name name :project-id project-id}
+      unique-template-name-for-project?*
+      :response
+      (= 0)))
+
 #_(do (require '[hugsql.core :as h])
       (h/def-sqlvec-fns "sql/queries/templates.sql"))

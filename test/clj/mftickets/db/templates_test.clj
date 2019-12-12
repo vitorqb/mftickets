@@ -114,3 +114,10 @@
 
           (testing "Returns correct creation date"
             (is (= now (:creation-date response)))))))))
+
+(deftest test-unique-template-name-for-project?
+
+  (tu/with-db
+    (is (true? (sut/unique-template-name-for-project? "foo" 1)))
+    (tu/gen-save! tu/template {:name "foo" :project-id 1})
+    (is (false? (sut/unique-template-name-for-project? "foo" 1)))))

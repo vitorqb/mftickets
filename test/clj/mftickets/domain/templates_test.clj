@@ -329,3 +329,8 @@
       (testing "Calls create-new-template-sections"
         (is (= [sut/create-sections-for-new-template inject (:sections template) ::db.core/<]
                (->> template (sut/create-template! inject) second)))))))
+
+(deftest test-unique-template-name-for-project?
+  (with-redefs [db.templates/unique-template-name-for-project?
+                (fn [new-name project-id] [::unique-name new-name project-id])]
+    (is (= [::unique-name "x" 1] (sut/unique-template-name-for-project? "x" 1)))))
