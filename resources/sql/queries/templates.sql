@@ -39,3 +39,7 @@ WHERE id = :id;
 -- :doc Creates a template.
 INSERT INTO templates (name, projectId, creationDate)
 VALUES (:name, :project-id, :creation-date);
+
+-- :name unique-template-name-for-project?* :result :1
+-- :doc Returns true or false in response.
+SELECT EXISTS(SELECT 1 FROM templates WHERE name = :name AND projectId = :project-id) AS response;

@@ -1,6 +1,8 @@
-(ns mftickets.routes.services.templates.validation.update)
+(ns mftickets.routes.services.templates.validation.update
+  (:require [mftickets.domain.templates :as domain.templates]
+            [mftickets.routes.services.templates.validation.common :as templates.validation.common]))
 
-(def validations
+(def validations*
 
   [{:validation/id
     ::project-id-missmatch
@@ -62,3 +64,5 @@
     :validation/check-fn
     (fn [{:keys [old-template new-template]}]
       (not= (:creation-date old-template) (:creation-date new-template)))}])
+
+(def validations (concat templates.validation.common/validations validations*))

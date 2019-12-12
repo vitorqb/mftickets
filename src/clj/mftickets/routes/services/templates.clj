@@ -12,6 +12,9 @@
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.routes.services.templates.data-spec :as templates.data-spec]
+            [mftickets.routes.services.templates.validation.create
+             :as
+             templates.validation.create]
             [mftickets.routes.services.templates.validation.update
              :as
              templates.validation.update]
@@ -34,8 +37,8 @@
   "Validates a new template sent by the user to be created.
    Returns either [error-key error-message] or :validation/success."
   [new-template]
-  ;; as of now, there is no need for validation other than the specs themselves.
-  :validation/success)
+  (let [validations-args {:new-template new-template}]
+    (validation/validate templates.validation.create/validations validations-args)))
 
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"

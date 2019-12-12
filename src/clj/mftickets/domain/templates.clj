@@ -175,3 +175,7 @@
   (db.core/run-effects!
    [db.templates/create-template! new-template]
    [create-sections-for-new-template inject (:sections new-template) ::db.core/<]))
+
+(defn unique-template-name-for-project?
+  [name project-id]
+  (db.templates/unique-template-name-for-project? name project-id))
