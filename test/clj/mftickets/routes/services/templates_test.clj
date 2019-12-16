@@ -399,7 +399,7 @@
                  :template-section-id nil
                  :name "Foo Property"
                  :is-multiple false
-                 :value-type :section.property.value.types/text}
+                 :value-type :templates.properties.types/text}
 
                 section
                 {:id nil

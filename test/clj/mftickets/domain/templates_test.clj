@@ -202,7 +202,7 @@
   (let [properties [{:id 789
                      :name "Property"
                      :template-section-id 456
-                     :value-type :section.property.value.types/radio
+                     :value-type :templates.properties.types/radio
                      :is-multiple false}]
         sections [{:id 456
                    :template-id 123
@@ -255,7 +255,7 @@
     (testing "Removes one property and appends a new one"
       (let [new-properties [{:name "New Property"
                              :template-section-id 456
-                             :value-type :section.property.value.types/text
+                             :value-type :templates.properties.types/text
                              :is-multiple true}]
             new-sections [(-> sections first (assoc :properties new-properties))]
             new-template (assoc new-template :sections new-sections)]

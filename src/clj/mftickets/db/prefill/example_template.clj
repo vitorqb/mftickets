@@ -14,35 +14,35 @@
     :templateSectionId 1
     :name "Title"
     :isMultiple false
-    :valueType "section.property.value.types/text"}
+    :valueType "templates.properties.types/text"}
 
    :templateSectionProperties
    {:id 2
     :templateSectionId 1
     :name "State"
     :isMultiple false
-    :valueType "section.property.value.types/radio"}
+    :valueType "templates.properties.types/radio"}
 
    :templateSectionProperties
    {:id 3
     :templateSectionId 1
     :name "Start Date"
     :isMultiple false
-    :valueType "section.property.value.types/date"}
+    :valueType "templates.properties.types/date"}
 
    :templateSectionProperties
    {:id 4
     :templateSectionId 1
     :name "Description"
     :isMultiple false
-    :valueType "section.property.value.types/text"}
+    :valueType "templates.properties.types/text"}
 
    :templateSectionProperties
    {:id 5
     :templateSectionId 1
     :name "Updates"
     :isMultiple true
-    :valueType "section.property.value.types/text"}
+    :valueType "templates.properties.types/text"}
 
    :templateSectionPropertyTextValue
    {:id 1

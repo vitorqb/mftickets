@@ -107,7 +107,7 @@
       :template-section-id 1
       :name "Bar"
       :is-multiple false
-      :value-type :section.property.value.types/text}
+      :value-type :templates.properties.types/text}
      opts))
 
   DbFactory

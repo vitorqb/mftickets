@@ -85,7 +85,7 @@
                         :template-section-id 2
                         :name "Foo"
                         :is-multiple true
-                        :value-type :section.property.value.types/text}
+                        :value-type :templates.properties.types/text}
 
           property
           (tu/gen-save! tu/template-section-property raw-property)
@@ -95,7 +95,7 @@
                  :template-section-id 3
                  :name "Bar"
                  :is-multiple false
-                 :value-type :section.property.value.types/radio)
+                 :value-type :templates.properties.types/radio)
 
           _
           (sut/update-property! new-raw-property)]
@@ -109,7 +109,7 @@
     (let [raw-property {:template-section-id 2
                         :name "Foo"
                         :is-multiple true
-                        :value-type :section.property.value.types/text}
+                        :value-type :templates.properties.types/text}
 
           property
           (sut/create-property! raw-property)]
