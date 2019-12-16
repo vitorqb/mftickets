@@ -94,7 +94,7 @@
                       :name "Foo"
                       :template-section-id nil
                       :is-multiple false
-                      :value-type :section.property.value.types/text}
+                      :value-type :templates.properties.types/text}
             section {:id nil
                      :name "Bar"
                      :template-id (:id template)

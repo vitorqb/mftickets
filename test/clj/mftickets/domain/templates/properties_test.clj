@@ -3,6 +3,12 @@
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
             [mftickets.db.templates.properties :as db.templates.properties]))
 
+(deftest test-get-property-types
+  (is (= #{:domain.templates.properties/radio
+           :domain.templates.properties/text
+           :domain.templates.properties/date}
+         (sut/get-property-types))))
+
 (deftest test-get-properties-for-template
 
   (with-redefs [db.templates.properties/get-properties-for-template identity]
