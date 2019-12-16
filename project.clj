@@ -4,37 +4,33 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
-                 [cheshire "5.8.1"]
+                 [cheshire "5.9.0"]
                  [clojure.java-time "0.3.2"]
-                 [conman "0.8.3"]
-                 [cprop "0.1.14"]
-                 [expound "0.7.2"]
-                 [funcool/struct "1.4.0"]
+                 [conman "0.8.4"]
+                 [cprop "0.1.15"]
+                 [expound "0.8.2"]
                  [luminus-jetty "0.1.7"]
-                 [luminus-migrations "0.6.5"]
-                 [luminus-transit "0.1.1"]
+                 [luminus-migrations "0.6.6"]
+                 [luminus-transit "0.1.2"]
                  [luminus/ring-ttl-session "0.3.3"]
-                 [markdown-clj "1.10.0"]
-                 [metosin/muuntaja "0.6.4"]
-                 [metosin/reitit "0.3.9"]
+                 [metosin/muuntaja "0.6.6"]
+                 [metosin/reitit "0.3.10"]
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.6.0"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "0.4.2"]
                  [org.clojure/tools.logging "0.5.0"]
-                 [org.webjars.npm/bulma "0.7.5"]
-                 [org.webjars.npm/material-icons "0.3.0"]
-                 [org.webjars/webjars-locator "0.36"]
-                 [org.xerial/sqlite-jdbc "3.25.2"]
+                 [org.webjars/webjars-locator "0.38"]
+                 [org.xerial/sqlite-jdbc "3.28.0"]
                  [ring-webjars "0.2.0"]
-                 [ring/ring-core "1.7.1"]
+                 [ring/ring-core "1.8.0"]
                  [ring/ring-defaults "0.3.2"]
-                 [selmer "1.12.14"]
+                 [selmer "1.12.18"]
                  [clj-http "3.10.0"]
                  [clojure.java-time "0.3.2"]
                  [org.clojure/core.match "0.3.0"]
-                 [com.rpl/specter "1.1.2"]]
+                 [com.rpl/specter "1.1.3"]]
 
   :min-lein-version "2.0.0"
   
@@ -44,7 +40,7 @@
   :target-path "target/%s/"
   :main ^:skip-aot mftickets.core
 
-  :plugins []
+  :plugins [[lein-ancient "0.6.15"]]
 
   :profiles
   {:uberjar {:omit-source true
@@ -57,9 +53,9 @@
    :test          [:project/dev :project/test :profiles/test]
 
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
-                  :dependencies [[pjstadig/humane-test-output "0.9.0"]
+                  :dependencies [[pjstadig/humane-test-output "0.10.0"]
                                  [prone "2019-07-08"]
-                                 [ring/ring-devel "1.7.1"]
+                                 [ring/ring-devel "1.8.0"]
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]]
                   
