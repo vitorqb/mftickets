@@ -152,7 +152,7 @@
 
   {:pre [(ifn? get-sections-for-templates) (ifn? get-properties-for-templates)]}
 
-  (let [raw-template (get-raw-template id)]
+  (if-let [raw-template (get-raw-template id)]
     (raw-template->template
      raw-template
      (get-properties-for-templates [raw-template])

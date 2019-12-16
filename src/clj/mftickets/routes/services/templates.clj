@@ -54,23 +54,10 @@
       (handler request)
       {:status 404})))
 
-(defn- assoc-sections
-  "Assocs `:sections` for a template."
-  [template sections-getter]
-  (assoc template :sections (sections-getter template)))
-
-(defn- assoc-properties
-  "Assocs `:properties` for all template `:sections`."
-  [template properties-getter]
-  (domain.templates/assoc-properties-to-template template (properties-getter template)))
-
 (defn- get-template
   "Get's a template from an id."
   [template-id]
-  (some-> template-id
-          domain.templates/get-raw-template
-          (assoc-sections domain.templates.sections/get-sections-for-template)
-          (assoc-properties domain.templates.properties/get-properties-for-template)))
+  (domain.templates/get-template inject template-id))
 
 (defn- wrap-get-template
   "Wrapper that assocs ::template to the request, if found."

@@ -123,62 +123,27 @@
               response (handler request)]
           (is (= {::param request} response)))))))
 
-(deftest test-assoc-sections
-
-  (let [assoc-sections #'sut/assoc-sections]
-
-    (testing "Base"
-      (let [sections [{:id 1} {:id 2}]
-            sections-getter (constantly sections)]
-        (is (= {:sections sections}
-               (assoc-sections {} sections-getter)))))))
-
-(deftest test-assoc-properties
-
-  (let [assoc-properties #'sut/assoc-properties]
-
-    (testing "Base"
-      (let [properties [{:id 1 :template-section-id 10}
-                        {:id 2 :template-section-id 10}
-                        {:id 3 :template-section-id 11}]
-            sections [{:id 10} {:id 11} {:id 12}]
-            template {:sections sections}
-            property-getter (constantly properties)]
-        (is (= {:sections [{:id 10
-                            :properties [{:id 2 :template-section-id 10}
-                                         {:id 1 :template-section-id 10}]}
-                           {:id 11
-                            :properties [{:id 3 :template-section-id 11}]}
-                           {:id 12
-                            :properties []}]}
-               (assoc-properties template property-getter)))))))
-
 (deftest test-get-template
 
   (let [wrap-get-template #'sut/wrap-get-template
         wrap-user-has-access-to-template? #'sut/wrap-user-has-access-to-template?]
 
     (testing "Non-existing template"
-      (with-redefs [domain.templates/get-raw-template (constantly nil)]
+      (with-redefs [domain.templates/get-template (constantly nil)]
         (is (= {:status 404}
                (sut/handle-get {:parameters {:path {:id 1}}})))))
 
     (testing "Existing template"
-      (with-redefs [domain.templates/get-raw-template
-                    #(hash-map :id %)
+      (let [template {:id 7
+                      :sections [{:id 9 :properties [{:id 8 :template-section-id 9}]}]}]
+        (with-redefs [domain.templates/get-template (fn [_ _] template)]
 
-                    domain.templates.sections/get-sections-for-template
-                    (constantly [{:id 9}])
-
-                    domain.templates.properties/get-properties-for-template
-                    (constantly [{:id 8 :template-section-id 9}])]
-
-        (let [handler (-> sut/handle-get wrap-get-template)
-              response (handler {:parameters {:path {:id 9}}})]
-          (are [ks f] (f (get-in response ks ::nf))
-            [:status]   #(= 200 %)
-            [:body :id] #(= 9 %)
-            [:body :sections] #(= [{:id 9 :properties [{:id 8 :template-section-id 9}]}] %)))))))
+          (let [handler (-> sut/handle-get wrap-get-template)
+                response (handler {:parameters {:path {:id 9}}})]
+            (are [ks f] (f (get-in response ks ::nf))
+              [:status]   #(= 200 %)
+              [:body :id] #(= 7 %)
+              [:body :sections] #(= (:sections template) %))))))))
 
 (deftest test-wrap-get-template
 
@@ -266,8 +231,10 @@
 
                 project-template
                 (-> raw-project-template
-                    (#'sut/assoc-sections (constantly [project-template-section]))
-                    (#'sut/assoc-properties (constantly [project-template-section-property])))
+                    (#'domain.templates/assoc-sections-to-template
+                     [project-template-section])
+                    (#'domain.templates/assoc-properties-to-template
+                     [project-template-section-property]))
 
                 other-templates
                 [(tu/gen-save! tu/template {:id 2 :project-id 100})]
