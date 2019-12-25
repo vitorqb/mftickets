@@ -19,24 +19,25 @@
 (defn get-properties-for-template
   "Returns all properties for a template."
   [template]
-  (some->> {:template-id (:id template)}
-           get-properties-for-template*
-           (map parse-raw-property)))
+  (some-> {:template-id (:id template) :select (select-snip {})}
+          get-properties-for-template*
+          (->> (map parse-raw-property))))
 
 (defn get-properties-for-templates-ids
   "Returns all properties for a list of templates ids"
   [templates-ids]
-  (some-> templates-ids
-          (->> (hash-map :templates-ids))
+  (some-> {:templates-ids templates-ids :select (select-snip {})}
           get-properties-for-templates-ids*
           (->> (map parse-raw-property))))
 
 (defn get-properties-for-section [{id :id}]
-  (some->> {:section-id id} get-properties-for-section* (map parse-raw-property)))
+  (some-> {:section-id id :select (select-snip {})}
+          get-properties-for-section*
+          (->> (map parse-raw-property))))
 
 (defn get-property
   [id]
-  (some-> {:id id}
+  (some-> {:id id :select (select-snip {})}
           get-property*
           (utils.transform/remapkey :templatesectionid :template-section-id)
           (utils.transform/remapkey :ismultiple :is-multiple)

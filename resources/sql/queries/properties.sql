@@ -1,5 +1,4 @@
--- :name get-properties-for-template* :result :*
--- :doc Gets all properties for a template
+-- :snip select-snip
 SELECT
   properties.id,
   properties.templateSectionId,
@@ -7,40 +6,26 @@ SELECT
   properties.isMultiple,
   properties.valueType
 FROM templateSectionProperties as properties
+
+-- :name get-properties-for-template* :result :*
+-- :doc Gets all properties for a template
+:snip:select
 JOIN templateSections ON templateSections.id = properties.templateSectionId
 WHERE templateSections.templateId = :template-id;
 
 -- :name get-properties-for-section* :result :*
 -- :doc Gets all properties for a section
-SELECT
-  properties.id,
-  properties.templateSectionId,
-  properties.name,
-  properties.isMultiple,
-  properties.valueType
-  FROM templateSectionProperties as properties
+:snip:select
 WHERE properties.templateSectionId = :section-id;
 
 -- :name get-property* :result :1
 -- :doc Gets a properties by id
-SELECT
-  properties.id,
-  properties.templateSectionId,
-  properties.name,
-  properties.isMultiple,
-  properties.valueType
-FROM templateSectionProperties as properties
+:snip:select
 WHERE properties.id = :id;
 
 -- :name get-properties-for-templates-ids* :result :*
 -- :doc Gets all properties for a list of template ids.
-SELECT
-  properties.id,
-  properties.templateSectionId,
-  properties.name,
-  properties.isMultiple,
-  properties.valueType
-FROM templateSectionProperties as properties
+:snip:select
 JOIN templateSections ON templateSections.id = properties.templateSectionId
 WHERE templateSections.templateId IN (:v*:templates-ids);
 
