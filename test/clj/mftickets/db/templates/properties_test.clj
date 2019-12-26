@@ -40,14 +40,22 @@
       (tu/gen-save! tu/template-section-property {:id 999 :template-section-id 999})
 
       ;; And three properties for the sections
-      (let [properties
-            [(tu/gen-save! tu/template-section-property {:id 1 :template-section-id 1})
-             (tu/gen-save! tu/template-section-property {:id 2 :template-section-id 1})
-             (tu/gen-save! tu/template-section-property {:id 3 :template-section-id 2})]]
+      (let [property1
+            (tu/gen-save! tu/template-section-property {:id 1 :template-section-id 1 :order 1})
+
+            property2
+            (tu/gen-save! tu/template-section-property {:id 2 :template-section-id 1 :order 2})
+
+            property3
+            (tu/gen-save! tu/template-section-property {:id 3 :template-section-id 2 :order 0})
+            
+            properties
+            [property1 property2 property3]]
 
         (is (= [] (sut/get-properties-for-templates-ids [])))
         (is (= [] (sut/get-properties-for-templates-ids [888])))
-        (is (= properties (sut/get-properties-for-templates-ids [0 1 2 3])))))))
+        (is (= [property1 property2 property3]
+               (sut/get-properties-for-templates-ids [0 1 2 3])))))))
 
 (deftest test-get-properties-for-section
 
@@ -95,7 +103,8 @@
                  :template-section-id 3
                  :name "Bar"
                  :is-multiple false
-                 :value-type :templates.properties.types/radio)
+                 :value-type :templates.properties.types/radio
+                 :order 999)
 
           _
           (sut/update-property! new-raw-property)]
@@ -109,7 +118,8 @@
     (let [raw-property {:template-section-id 2
                         :name "Foo"
                         :is-multiple true
-                        :value-type :templates.properties.types/text}
+                        :value-type :templates.properties.types/text
+                        :order 0}
 
           property
           (sut/create-property! raw-property)]

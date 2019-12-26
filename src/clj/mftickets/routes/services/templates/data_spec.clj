@@ -25,7 +25,8 @@
        (ds/opt :template-section-id) (spec/or :int int? :nil nil?)
        :name string?
        :is-multiple boolean?
-       :value-type keyword?}]}]})
+       :value-type keyword?
+       :order (spec/nilable integer?)}]}]})
 
 (def create-template
   (->> template

@@ -60,7 +60,7 @@
    [update-raw-section! new-section]
    [update-section-properties! inject old-section new-section]))
 
-(defn- create-properties-for-new-section
+(defn- create-properties-for-new-section!
   "Create the properties for a new created section."
   [{::domain.templates.sections.inject/keys [get-properties-for-section] :as inject}
    new-section
@@ -77,7 +77,7 @@
   [inject section]
   (db.core/run-effects!
    [db.templates.sections/create-section! section]
-   [create-properties-for-new-section inject ::db.core/< (:properties section)]))
+   [create-properties-for-new-section! inject ::db.core/< (:properties section)]))
 
 (defn delete-properties-for-section!
   "Deletes all properties for a section."

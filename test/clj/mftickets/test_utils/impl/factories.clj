@@ -11,7 +11,8 @@
 (defprotocol DbFactory
   "A protocol for a factory that can be saved to db"
   (table [this] "Returns the table to use.")
-  (serialize-to-db [this obj] "Prepares an object to be saved into the db."))
+  (serialize-to-db [this obj] "Prepares an object to be saved into the db.")
+  (standardize-raw-obj [this obj] "Parses the raw data used to store into it's standard form"))
 
 (defn save! [strategy obj insert!]
   "Saves obj to the database using strategy."
@@ -21,7 +22,7 @@
   (let [serialized-obj (serialize-to-db strategy obj)
         table          (table strategy)]
     (insert! table serialized-obj)
-    obj))
+    (standardize-raw-obj strategy obj)))
 
 (defn gen-save! [strategy opts insert!]
   "Generates and insert's an object into the db."
@@ -50,7 +51,8 @@
      opts
      {:user-id :userId
       :has-been-invalidated :hasBeenInvalidated
-      :created-at :createdAt})))
+      :created-at :createdAt}))
+  (standardize-raw-obj [_ x] x))
 
 (deftype UsersProjects []
   Factory
@@ -60,7 +62,8 @@
   DbFactory
   (table [_] :usersProjects)
   (serialize-to-db [_ opts]
-    (clojure.set/rename-keys opts {:user-id :userId :project-id :projectId})))
+    (clojure.set/rename-keys opts {:user-id :userId :project-id :projectId}))
+  (standardize-raw-obj [_ x] x))
 
 (deftype Project []
   Factory
@@ -69,7 +72,8 @@
 
   DbFactory
   (table [_] :projects)
-  (serialize-to-db [_ opts] opts))
+  (serialize-to-db [_ opts] opts)
+  (standardize-raw-obj [_ x] x))
 
 (deftype User []
   Factory
@@ -77,7 +81,8 @@
 
   DbFactory
   (table [_] :users)
-  (serialize-to-db [_ opts] opts))
+  (serialize-to-db [_ opts] opts)
+  (standardize-raw-obj [_ x] x))
 
 (deftype Template []
   Factory
@@ -89,7 +94,8 @@
   DbFactory
   (table [_] :templates)
   (serialize-to-db [_ {:keys [id project-id name creation-date]}]
-    {:id id :projectId project-id :name name :creationDate creation-date}))
+    {:id id :projectId project-id :name name :creationDate creation-date})
+  (standardize-raw-obj [_ x] x))
 
 (deftype TemplateSection []
   Factory
@@ -97,7 +103,8 @@
 
   DbFactory
   (table [_] :templateSections)
-  (serialize-to-db [_ opts] (clojure.set/rename-keys opts {:template-id :templateId})))
+  (serialize-to-db [_ opts] (clojure.set/rename-keys opts {:template-id :templateId}))
+  (standardize-raw-obj [_ x] x))
 
 (deftype TemplateSectionProperty []
   Factory
@@ -107,7 +114,8 @@
       :template-section-id 1
       :name "Bar"
       :is-multiple false
-      :value-type :templates.properties.types/text}
+      :value-type :templates.properties.types/text
+      :order 0}
      opts))
 
   DbFactory
@@ -117,4 +125,6 @@
         (update :value-type utils.kw/full-name)
         (clojure.set/rename-keys {:template-section-id :templateSectionId
                                   :is-multiple :isMultiple
-                                  :value-type :valueType}))))
+                                  :value-type :valueType
+                                  :order :orderIndex})))
+  (standardize-raw-obj [_ x] x))
