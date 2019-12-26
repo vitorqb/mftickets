@@ -349,11 +349,14 @@
                 new-property-name
                 "New Property Name"
 
+                new-order
+                99
+
                 new-template
                 (-> template
                     (assoc :name new-name)
-                    (assoc-in [:sections 0 :properties 0 :name]
-                              new-property-name))
+                    (assoc-in [:sections 0 :properties 0 :name] new-property-name)
+                    (assoc-in [:sections 0 :properties 0 :order] new-order))
                 
                 request
                 (-> (mock.request/request :post (str "/api/templates/" template-id))
@@ -399,7 +402,8 @@
                  :template-section-id nil
                  :name "Foo Property"
                  :is-multiple false
-                 :value-type :templates.properties.types/text}
+                 :value-type :templates.properties.types/text
+                 :order 0}
 
                 section
                 {:id nil
@@ -475,7 +479,11 @@
 
                   (testing "value-type"
                     (is (= (-> property :value-type utils.kw/full-name)
-                           (-> body :sections first :properties first :value-type)))))))))))))
+                           (-> body :sections first :properties first :value-type))))
+
+                  (testing "order"
+                    (is (= (:order property)
+                           (-> body :sections first :properties first :order)))))))))))))
 
 (deftest test-handle-get-project-templates
 

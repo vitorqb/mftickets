@@ -4,7 +4,8 @@ SELECT
   properties.templateSectionId,
   properties.name,
   properties.isMultiple,
-  properties.valueType
+  properties.valueType,
+  properties.orderIndex
 FROM templateSectionProperties as properties
 
 -- :name get-properties-for-template* :result :*
@@ -21,7 +22,8 @@ WHERE properties.templateSectionId = :section-id;
 -- :name get-property* :result :1
 -- :doc Gets a properties by id
 :snip:select
-WHERE properties.id = :id;
+WHERE properties.id = :id
+LIMIT 1;
 
 -- :name get-properties-for-templates-ids* :result :*
 -- :doc Gets all properties for a list of template ids.
@@ -39,10 +41,11 @@ UPDATE templateSectionProperties
 SET templateSectionId = :template-section-id,
     name = :name,
     isMultiple = :is-multiple,
-    valueType = :value-type
+    valueType = :value-type,
+    orderIndex = :order
 WHERE id = :id;
 
 -- :name create-property!* :insert :raw
 -- :doc Creates a property
-INSERT INTO templateSectionProperties (templateSectionId, name, isMultiple, valueType)
-VALUES (:template-section-id, :name, :is-multiple, :value-type);
+INSERT INTO templateSectionProperties (templateSectionId, name, isMultiple, valueType, orderIndex)
+VALUES (:template-section-id, :name, :is-multiple, :value-type, :order);

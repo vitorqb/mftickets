@@ -55,7 +55,7 @@
           (is (some #{[delete-property! {:id 2}]} effects)))
 
         (testing "Updates properties"
-          (is (some #{[update-property! {:id 3}]} effects)))))))
+          (is (some #{[update-property! (get new-properties 0)]} effects)))))))
 
 (deftest test-update-raw-section!
 
@@ -83,7 +83,7 @@
                                                      :delete-property! (constantly nil)}]
       (with-redefs [db.core/run-effects! (fn [& xs] xs)]
         (is (= [[db.templates.sections/create-section! section]
-                [@#'sut/create-properties-for-new-section inject ::db.core/< properties]]
+                [@#'sut/create-properties-for-new-section! inject ::db.core/< properties]]
                (sut/create-section! inject section))))))
 
   (testing "Integration:"

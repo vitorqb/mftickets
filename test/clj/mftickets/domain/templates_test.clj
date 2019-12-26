@@ -203,7 +203,8 @@
                      :name "Property"
                      :template-section-id 456
                      :value-type :templates.properties.types/radio
-                     :is-multiple false}]
+                     :is-multiple false
+                     :order 0}]
         sections [{:id 456
                    :template-id 123
                    :name "Section"
@@ -256,7 +257,8 @@
       (let [new-properties [{:name "New Property"
                              :template-section-id 456
                              :value-type :templates.properties.types/text
-                             :is-multiple true}]
+                             :is-multiple true
+                             :order 0}]
             new-sections [(-> sections first (assoc :properties new-properties))]
             new-template (assoc new-template :sections new-sections)]
         (tu/with-db
