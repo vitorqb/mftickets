@@ -99,11 +99,12 @@
 
 (deftype TemplateSection []
   Factory
-  (gen [_ opts] (merge {:id 1 :template-id 9 :name "Foo"} opts))
+  (gen [_ opts] (merge {:id 1 :template-id 9 :name "Foo" :order 0} opts))
 
   DbFactory
   (table [_] :templateSections)
-  (serialize-to-db [_ opts] (clojure.set/rename-keys opts {:template-id :templateId}))
+  (serialize-to-db [_ opts]
+    (clojure.set/rename-keys opts {:template-id :templateId :order :orderIndex}))
   (standardize-raw-obj [_ x] x))
 
 (deftype TemplateSectionProperty []

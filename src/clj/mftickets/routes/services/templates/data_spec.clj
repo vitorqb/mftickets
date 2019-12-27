@@ -20,6 +20,7 @@
    [{(ds/opt :id) (spec/or :int int? :nil nil?)
      :template-id int?
      :name string?
+     :order (spec/nilable integer?)
      :properties
      [{(ds/opt :id) (spec/or :int int? :nil nil?)
        (ds/opt :template-section-id) (spec/or :int int? :nil nil?)

@@ -208,6 +208,7 @@
         sections [{:id 456
                    :template-id 123
                    :name "Section"
+                   :order 999
                    :properties properties}]
         new-template {:id 123
                       :project-id 456
@@ -241,7 +242,7 @@
           (is (= "FOO" (-> new-template :id sut/get-raw-template :name))))))
 
     (testing "Removes one section and appends a new one"
-      (let [new-sections [{:template-id 123 :name "000"}]
+      (let [new-sections [{:template-id 123 :name "000" :order 888}]
             new-template (assoc new-template :sections new-sections)]
         (tu/with-db
           (tu/gen-save! tu/template (dissoc old-template :sections))
