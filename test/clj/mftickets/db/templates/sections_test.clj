@@ -58,18 +58,21 @@
 
   (tu/with-db
     (let [section (tu/gen-save! tu/template-section {})
-          new-section {:id (:id section) :template-id 999 :name "Foo Baz 999"}
+          new-section {:id (:id section) :template-id 999 :name "Foo Baz 999" :order 123871}
           _ (@#'sut/update-raw-section! new-section)]
 
       (testing "Name is updated"
         (is (= (:name new-section) (-> section :id sut/get-section :name))))
 
       (testing "template-id is ignored"
-        (is (= (:template-id section) (-> section :id sut/get-section :template-id)))))))
+        (is (= (:template-id section) (-> section :id sut/get-section :template-id))))
+
+      (testing "Order is updated"
+        (is (= (:order new-section) (-> section :id sut/get-section :order)))))))
 
 (deftest test-create-section!
 
-  (let [section {:template-id 999 :name "Foo Bar Baz"}]
+  (let [section {:template-id 999 :name "Foo Bar Baz" :order 213213}]
     (tu/with-db
       (let [created-section (sut/create-section! section)]
         (is (int? (:id created-section)))

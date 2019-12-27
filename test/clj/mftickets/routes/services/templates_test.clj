@@ -7,6 +7,7 @@
             [mftickets.domain.templates :as domain.templates]
             [mftickets.domain.templates.properties :as domain.templates.properties]
             [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.templates.transform :as d.templates.transform]
             [mftickets.domain.users :as domain.users]
             [mftickets.handler :refer [app]]
             [mftickets.http.responses :as http.responses]
@@ -15,12 +16,12 @@
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.routes.services.templates :as sut]
-            [mftickets.routes.services.templates.validation.update
-             :as
-             templates.validation.update]
             [mftickets.routes.services.templates.validation.common
              :as
              templates.validation.common]
+            [mftickets.routes.services.templates.validation.update
+             :as
+             templates.validation.update]
             [mftickets.test-utils :as tu]
             [mftickets.utils.kw :as utils.kw]
             [ring.mock.request :as mock.request]))
@@ -385,6 +386,72 @@
                          ((app))
                          (tu/decode-response-body)))))))))))
 
+(deftest test-integration-edit-template-section-ordering
+
+  (tu/with-app
+    (tu/with-db
+      (tu/with-user-and-token [user token]
+
+        (testing "Editing a template section ordering"
+          (let [template-id
+                5
+
+                section1-id
+                6
+
+                section2-id
+                7
+
+                project
+                (tu/gen-save! tu/project {})
+
+                _
+                (tu/gen-save! tu/users-projects {:user-id (:id user)
+                                                 :project-id (:id project)})
+
+                _
+                (tu/gen-save! tu/template {:id template-id
+                                           :project-id (:id project)})
+
+                _
+                (tu/gen-save! tu/template-section {:id section1-id
+                                                   :template-id template-id
+                                                   :order 0})
+
+                _
+                (tu/gen-save! tu/template-section {:id section2-id
+                                                   :template-id template-id
+                                                   :order 1})
+
+                template
+                (-> (mock.request/request :get (str "/api/templates/" template-id))
+                    (tu/auth-header token)
+                    ((app))
+                    (tu/decode-response-body))
+
+                new-template
+                (-> template
+                    (d.templates.transform/set-section-order section1-id 1)
+                    (d.templates.transform/set-section-order section2-id 0))
+                
+                request
+                (-> (mock.request/request :post (str "/api/templates/" template-id))
+                    (mock.request/json-body new-template)
+                    (tu/auth-header token))
+
+                response
+                ((app) request)
+
+                body
+                (tu/decode-response-body response)]
+
+            (testing "Same template id is returned"
+              (is (= template-id (:id body))))
+
+            (testing "Ordering is changed"
+              (is (= 1 (d.templates.transform/get-section-order body section1-id)))
+              (is (= 0 (d.templates.transform/get-section-order body section2-id))))))))))
+
 (deftest test-integration-create-template
 
   (testing "Success requests: "
@@ -409,7 +476,8 @@
                 {:id nil
                  :template-id nil
                  :name "Foo Section"
-                 :properties [property]}
+                 :properties [property]
+                 :order 0}
 
                 new-template
                 {:id nil
