@@ -26,7 +26,7 @@
   ["/api"
    {:coercion spec-coercion/coercion
     :muuntaja formats/instance
-    :swagger {:id ::api}
+    :swagger {:id ::API :tags ["API"]}
     :middleware [;; query-params & form-params
                  parameters/parameters-middleware
                  ;; content-negotiation
@@ -45,9 +45,8 @@
                  multipart/multipart-middleware]}
 
    ;; swagger documentation
-   ["" {:no-doc true
-        :swagger {:info {:title "my-api"
-                         :description "https://cljdoc.org/d/metosin/reitit"}}}
+   ["" {:swagger {:info {:title "MfTickets" :description "https://github.com/vitorqb/mftickets/"}}
+        :no-doc true}
 
     ["/swagger.json"
      {:get (swagger/create-swagger-handler)}]
@@ -57,61 +56,27 @@
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-   (into ["/app-metadata" {:middleware [wrap-auth]}] routes.services.app-metadata/routes)
+   (into ["/app-metadata" {:middleware [wrap-auth] :swagger {:tags ["METADATA"]}}]
+         routes.services.app-metadata/routes)
 
-   (into ["/login" {}] routes.services.login/routes)
+   (into ["/login" {:swagger {:tags ["LOG IN"]}}] routes.services.login/routes)
+
    (into
     ["/templates"
      {:middleware [wrap-auth]
-      :parameters {:header {:authorization string?}}}]
+      :parameters {:header {:authorization string?}}
+      :swagger {:tags ["TEMPLATES"]}}]
     routes.services.templates/routes)
+
    (into
     ["/projects"
      {:middleware [wrap-auth]
-      :parameters {:header {:authorization string?}}}]
+      :parameters {:header {:authorization string?}}
+      :swagger {:tags ["PROJECTS"]}}]
     routes.services.projects/routes)
 
    ["/ping"
     {:middleware [wrap-auth]
      :parameters {:header {:authorization string?}}
-     :get (constantly (ok {:message "pong"}))}]
-   
-
-   ["/math"
-    {:swagger {:tags ["math"]}}
-
-    ["/plus"
-     {:get {:summary "plus with spec query parameters"
-            :parameters {:query {:x int?, :y int?}}
-            :responses {200 {:body {:total pos-int?}}}
-            :handler (fn [{{{:keys [x y]} :query} :parameters}]
-                       {:status 200
-                        :body {:total (+ x y)}})}
-      :post {:summary "plus with spec body parameters"
-             :parameters {:body {:x int?, :y int?}}
-             :responses {200 {:body {:total pos-int?}}}
-             :handler (fn [{{{:keys [x y]} :body} :parameters}]
-                        {:status 200
-                         :body {:total (+ x y)}})}}]]
-
-   ["/files"
-    {:swagger {:tags ["files"]}}
-
-    ["/upload"
-     {:post {:summary "upload a file"
-             :parameters {:multipart {:file multipart/temp-file-part}}
-             :responses {200 {:body {:name string?, :size int?}}}
-             :handler (fn [{{{:keys [file]} :multipart} :parameters}]
-                        {:status 200
-                         :body {:name (:filename file)
-                                :size (:size file)}})}}]
-
-    ["/download"
-     {:get {:summary "downloads a file"
-            :swagger {:produces ["image/png"]}
-            :handler (fn [_]
-                       {:status 200
-                        :headers {"Content-Type" "image/png"}
-                        :body (-> "public/img/warning_clojure.png"
-                                  (io/resource)
-                                  (io/input-stream))})}}]]])
+     :swagger {:tags ["PING"]}
+     :get (constantly (ok {:message "pong"}))}]])
