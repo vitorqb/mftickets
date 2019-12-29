@@ -660,3 +660,56 @@
 
           (testing "The new template as body"
             (is (= ::new-template (:body response)))))))))
+
+(deftest test-handle-delete
+
+  (let [template {:id 1}
+        request {::sut/template template}]
+
+    (testing "Returns validation error if validation fails"
+      (let [error [:foo "bar"]]
+        (with-redefs [sut/validate-template-delete (constantly error)]
+          (is (= (http.responses/validation-error error) (sut/handle-delete request))))))
+
+    (testing "Calls deletion if validation succeeds."
+      (let [calls (atom [])]
+        (with-redefs [domain.templates/delete-template! #(swap! calls conj [::delete-template! %])]
+          (is (= {:status 200} (sut/handle-delete request)))
+          (is (= [[::delete-template! template]] @calls)))))))
+
+(deftest test-handle-delete-integration
+
+  (tu/with-db
+    (tu/with-app
+      (tu/with-user-and-token [user token]
+
+        (let [project
+              (tu/gen-save! tu/project)
+
+              _
+              (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id (:id project)})
+
+              template (tu/gen-save! tu/template {:user-id (:id user) :project-id (:id project)})
+
+              get-request
+              (-> (mock.request/request :get (str "/api/templates/" (:id template)))
+                  (mock.request/query-string {:project-id (:id project)})
+                  (tu/auth-header token))
+
+              delete-request
+              (-> (mock.request/request :delete (str "/api/templates/" (:id template)))
+                  (tu/auth-header token))]
+
+          (testing "Template exists before deletion"
+            (let [response ((app) get-request)]
+              (is (= 200 (:status response)))
+              (is (= (:name template) (:name (tu/decode-response-body response))))))
+
+          (testing "Sends delete request and response"
+            (let [response ((app) delete-request)]
+              (is (= 200 (:status response)))
+              (is (empty? (:body response)))))
+
+          (testing "Template no longer exists after deletion"
+            (let [response ((app) get-request)]
+              (is (= 404 (:status response))))))))))

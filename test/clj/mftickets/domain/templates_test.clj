@@ -337,3 +337,7 @@
   (with-redefs [db.templates/unique-template-name-for-project?
                 (fn [new-name project-id] [::unique-name new-name project-id])]
     (is (= [::unique-name "x" 1] (sut/unique-template-name-for-project? "x" 1)))))
+
+(deftest test-delete-template
+  (with-redefs [db.templates/delete-template! (fn [x] [::delete-template! x])]
+    (is (= [::delete-template! {:id 1}] (sut/delete-template! {:id 1})))))

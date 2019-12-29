@@ -43,3 +43,7 @@ VALUES (:name, :project-id, :creation-date);
 -- :name unique-template-name-for-project?* :result :1
 -- :doc Returns true or false in response.
 SELECT EXISTS(SELECT 1 FROM templates WHERE name = :name AND projectId = :project-id) AS response;
+
+-- :name delete-template* :! :n
+-- :doc Deletes a template
+DELETE FROM templates WHERE id = :id;

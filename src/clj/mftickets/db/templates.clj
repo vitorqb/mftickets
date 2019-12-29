@@ -54,5 +54,7 @@
       :response
       (= 0)))
 
+(defn delete-template! [{:keys [id]}] (delete-template* {:id id}))
+
 #_(do (require '[hugsql.core :as h])
       (h/def-sqlvec-fns "sql/queries/templates.sql"))

@@ -40,6 +40,12 @@
   (let [validations-args {:new-template new-template}]
     (validation/validate templates.validation.create/validations validations-args)))
 
+(defn- validate-template-delete
+  "Validates a template being deleted."
+  [template]
+  ;; We don't currently validate anything
+  :validation/success)
+
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
   [user template]
@@ -114,6 +120,17 @@
     err
     (http.responses/validation-error err)))
 
+(defn handle-delete
+  "Handler for deleting a template."
+  [{template ::template}]
+  (match/match (validate-template-delete template)
+    :validation/success
+    (do (domain.templates/delete-template! template)
+        {:status 200})
+
+    err
+    (http.responses/validation-error err)))
+
 (def ^:private wrap-get-project
   [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])
 
@@ -131,7 +148,10 @@
      :post {:summary "Post (edit) a template."
             :parameters {:path {:id int?}
                          :body templates.data-spec/template}
-            :handler #'handle-post}}]
+            :handler #'handle-post}
+     :delete {:summary "Deletes a template."
+              :parameters {:path {:id int?}}
+              :handler #'handle-delete}}]
    [""
     {:middleware [[middleware.pagination/wrap-pagination-data]
                   [wrap-get-project]
