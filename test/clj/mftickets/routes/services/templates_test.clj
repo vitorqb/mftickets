@@ -213,16 +213,10 @@
   (testing "Base integration"
     (tu/with-app
       (tu/with-db
-        (tu/with-user-and-token [user token]
-
-          ;; Adds a project
-          (tu/gen-save! tu/project {:id 99})
-
-          ;; Assign to user
-          (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id 99})
+        (tu/with-user-and-token [user token project]
           
           (let [raw-project-template
-                (tu/gen-save! tu/template {:id 1 :project-id 99})
+                (tu/gen-save! tu/template {:id 1 :project-id (:id project)})
 
                 project-template-section
                 (tu/gen-save! tu/template-section {:id 2 :template-id 1})
@@ -242,7 +236,7 @@
 
                 request
                 (-> (mock.request/request :get "/api/templates")
-                    (mock.request/query-string {:project-id 99})
+                    (mock.request/query-string {:project-id (:id project)})
                     (tu/auth-header token))
 
                 resp
@@ -269,12 +263,12 @@
                 (is (= [project-template*] items))))
 
             ;; Now adds another template
-            (tu/gen-save! tu/template {:id 3 :project-id 99})
+            (tu/gen-save! tu/template {:id 3 :project-id (:id project)})
 
             (testing "Pagination with more than one items"
               (let [request
                     (-> (mock.request/request :get "/api/templates")
-                        (mock.request/query-string {:project-id 99
+                        (mock.request/query-string {:project-id (:id project)
                                                     :pageNumber 1
                                                     :pageSize 1})
                         (tu/auth-header token))
@@ -290,12 +284,13 @@
                 (is (= 2 total-items-count))))
 
             ;; Now adds a template with a funny name
-            (tu/gen-save! tu/template {:id 4 :name "funny NaMe!" :project-id 99})
+            (tu/gen-save! tu/template {:id 4 :name "funny NaMe!" :project-id (:id project)})
 
             (testing "Filtering by name"
               (let [request
                     (-> (mock.request/request :get "/api/templates")
-                        (mock.request/query-string {:project-id 99 :name-like "funny name"})
+                        (mock.request/query-string {:project-id (:id project)
+                                                    :name-like "funny name"})
                         (tu/auth-header token))
 
                     resp
@@ -311,7 +306,7 @@
 
   (tu/with-app
     (tu/with-db
-      (tu/with-user-and-token [user token]
+      (tu/with-user-and-token [user token project]
 
         (testing "Editing template and property name with post..."
           (let [template-id
@@ -323,12 +318,6 @@
                 name
                 "Foo Template"
 
-                project
-                (tu/gen-save! tu/project {})
-
-                _
-                (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id (:id project)})
-                
                 _
                 (tu/gen-save! tu/template {:id template-id :name name :project-id (:id project)})
 
@@ -390,7 +379,7 @@
 
   (tu/with-app
     (tu/with-db
-      (tu/with-user-and-token [user token]
+      (tu/with-user-and-token [user token project]
 
         (testing "Editing a template section ordering"
           (let [template-id
@@ -401,13 +390,6 @@
 
                 section2-id
                 7
-
-                project
-                (tu/gen-save! tu/project {})
-
-                _
-                (tu/gen-save! tu/users-projects {:user-id (:id user)
-                                                 :project-id (:id project)})
 
                 _
                 (tu/gen-save! tu/template {:id template-id
@@ -457,14 +439,8 @@
   (testing "Success requests: "
     (tu/with-db
       (tu/with-app
-        (tu/with-user-and-token [user token]
-          (let [project
-                (tu/gen-save! tu/project)
-
-                _
-                (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id (:id project)})
-
-                property
+        (tu/with-user-and-token [user token project]
+          (let [property
                 {:id nil
                  :template-section-id nil
                  :name "Foo Property"
@@ -681,15 +657,9 @@
 
   (tu/with-db
     (tu/with-app
-      (tu/with-user-and-token [user token]
+      (tu/with-user-and-token [user token project]
 
-        (let [project
-              (tu/gen-save! tu/project)
-
-              _
-              (tu/gen-save! tu/users-projects {:user-id (:id user) :project-id (:id project)})
-
-              template (tu/gen-save! tu/template {:user-id (:id user) :project-id (:id project)})
+        (let [template (tu/gen-save! tu/template {:user-id (:id user) :project-id (:id project)})
 
               get-request
               (-> (mock.request/request :get (str "/api/templates/" (:id template)))

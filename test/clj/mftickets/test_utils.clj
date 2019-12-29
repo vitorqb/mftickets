@@ -1,15 +1,15 @@
 (ns mftickets.test-utils
-  (:require
-   [mftickets.test-utils.impl.factories :as impl.factories]
-   [mftickets.db.core :as db.core]
-   [mftickets.domain.users :as domain.user]
-   [conman.core :as conman]
-   [mount.core :as mount]
-   [mftickets.config :as config]
-   [luminus-migrations.core :as migrations]
-   [muuntaja.core :as muuntaja]
-   [clojure.java.jdbc :as jdbc]
-   [ring.mock.request :as mock.request]))
+  (:require [clojure.java.jdbc :as jdbc]
+            [conman.core :as conman]
+            [luminus-migrations.core :as migrations]
+            [mftickets.config :as config]
+            [mftickets.db.core :as db.core]
+            [mftickets.domain.projects :as domain.projects]
+            [mftickets.domain.users :as domain.user]
+            [mftickets.test-utils.impl.factories :as impl.factories]
+            [mount.core :as mount]
+            [muuntaja.core :as muuntaja]
+            [ring.mock.request :as mock.request]))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -50,14 +50,21 @@
                  #'mftickets.handler/app-routes)))
 
 (defmacro with-user-and-token
-  "Context handler providing an user and a token."
-  [[user-sym token-sym] & body]
-  {:pre [(symbol? user-sym) (symbol? token-sym)]}
+  "Context handler providing an user and a token.
+  If `project-sym` is given, also creates a project and assigns it to the user."
+  [[user-sym token-sym project-sym] & body]
+  {:pre [(symbol? user-sym) (symbol? token-sym) (or (nil? project-sym) (symbol? project-sym))]}
   `(do
      (insert! :users {:id 1 :email "user@user.com"})
      (insert! :userLoginTokens {:id 1 :userId 1 :value "foo" :createdAt "2019-01-01T12:12:12"})
+     ~@(when project-sym
+         `((insert! :projects {:id 127381 :name "A Project" :description "A proj description"})
+           (insert! :usersProjects {:id 78218127 :userId 1 :projectId 127381})))
      (let [~user-sym (domain.user/get-user-by-id {:id 1})
-           ~token-sym "foo"]
+           ~token-sym "foo"
+           ~@(and project-sym `(~project-sym (domain.projects/get-project 127381)))
+           ;; ~(or project-sym '_) ~(and project-sym '(domain.projects/get-project 127381))
+           ]
        ~@body)))
 
 (defn decode-response-body
