@@ -179,3 +179,7 @@
 (defn unique-template-name-for-project?
   [name project-id]
   (db.templates/unique-template-name-for-project? name project-id))
+
+(defn delete-template!
+  [template]
+  (db.templates/delete-template! template))

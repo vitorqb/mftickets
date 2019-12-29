@@ -121,3 +121,15 @@
     (is (true? (sut/unique-template-name-for-project? "foo" 1)))
     (tu/gen-save! tu/template {:name "foo" :project-id 1})
     (is (false? (sut/unique-template-name-for-project? "foo" 1)))))
+
+(deftest test-delete-template
+
+  (tu/with-db
+    (let [template (tu/gen-save! tu/template)]
+
+      (testing "Exists before..."
+        (is (= (:id template) (:id (sut/get-raw-template template)))))
+
+      (testing "Does not exists after..."
+        (sut/delete-template! template)
+        (is (nil? (sut/get-raw-template template)))))))
