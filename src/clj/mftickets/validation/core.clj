@@ -1,6 +1,7 @@
 (ns mftickets.validation.core
   "Defines the public API for the validation system of incoming data."
-  (:require [clojure.spec.alpha :as spec]))
+  (:require [clojure.core.match :as match]
+            [clojure.spec.alpha :as spec]))
 
 (spec/def :validation/id keyword?)
 (spec/def :validation/message string?)
@@ -29,3 +30,23 @@
       (nil? validation) (recur todo)
       (check-fn data) [id message]
       :else (recur todo))))
+
+(defmacro if-let-err
+  "Evaluates the validation expression. If if evaluates to an error, evaluates the `if`
+  block with the binding. Else, evaluates the `else` block.
+  Same as:
+  `(match/match validation
+     :validation/success
+     else
+
+     err
+     then)`"
+  {:style/indent 1}
+  [[err-sym validate-expr] then else]
+  {:pre [(symbol? err-sym)]}
+  `(match/match ~validate-expr
+     :validation/success
+     ~else
+
+     ~err-sym
+     ~then))

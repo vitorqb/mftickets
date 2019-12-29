@@ -100,36 +100,28 @@
 (defn handle-post
   [{old-template ::template {new-template :body} :parameters :as r}]
 
-  (match/match (validate-template-update old-template new-template)
-    :validation/success
+  (validation/if-let-err [err (validate-template-update old-template new-template)]
+    (http.responses/validation-error err)
     (do
       (domain.templates/update-template! inject old-template new-template)
-      {:status 200 :body (get-template (:id new-template))})
-    
-    err
-    (http.responses/validation-error err)))
+      {:status 200 :body (get-template (:id new-template))})))
 
 (defn handle-creation-post
   "Handlers a POST aiming at creating a new template."
   [{{new-template :body} :parameters}]
 
-  (match/match (validate-new-template new-template)
-    :validation/success
-    {:status 200 :body (domain.templates/create-template! inject new-template)}
-
-    err
-    (http.responses/validation-error err)))
+  (validation/if-let-err [err (validate-new-template new-template)]
+    (http.responses/validation-error err)
+    {:status 200 :body (domain.templates/create-template! inject new-template)}))
 
 (defn handle-delete
   "Handler for deleting a template."
   [{template ::template}]
-  (match/match (validate-template-delete template)
-    :validation/success
-    (do (domain.templates/delete-template! template)
-        {:status 200})
 
-    err
-    (http.responses/validation-error err)))
+  (validation/if-let-err [err (validate-template-delete template)]
+    (http.responses/validation-error err)
+    (do (domain.templates/delete-template! template)
+        {:status 200})))
 
 (def ^:private wrap-get-project
   [middleware.context/wrap-get-project {:not-found invalid-project-id-response}])

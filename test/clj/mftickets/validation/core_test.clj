@@ -52,3 +52,17 @@
 
           validations [validation1 validation2 validation3]]
       (is (= [id2 message2] (sut/validate validations {}))))))
+
+(deftest test-if-let-err
+
+  (testing "Else branch"
+    (is (= ::bar
+           (sut/if-let-err [e ((constantly :validation/success))]
+             ::foo
+             ::bar))))
+
+  (testing "If branch"
+    (is (= [::result [::foo ::bar]]
+           (sut/if-let-err [e ((constantly [::foo ::bar]))]
+             [::result e]
+             ::bar)))))
