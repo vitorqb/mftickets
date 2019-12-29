@@ -9,15 +9,7 @@
    [luminus-migrations.core :as migrations]
    [muuntaja.core :as muuntaja]
    [clojure.java.jdbc :as jdbc]
-   [ring.mock.request :as mock.request])
-  (:import
-   (mftickets.test_utils.impl.factories Template)
-   (mftickets.test_utils.impl.factories TemplateSection)
-   (mftickets.test_utils.impl.factories TemplateSectionProperty)
-   (mftickets.test_utils.impl.factories UserLoginToken)
-   (mftickets.test_utils.impl.factories UsersProjects)
-   (mftickets.test_utils.impl.factories Project)
-   (mftickets.test_utils.impl.factories User)))
+   [ring.mock.request :as mock.request]))
 
 (def test-db "jdbc:sqlite:mftickets_test.db")
 
@@ -86,10 +78,10 @@
   ([strategy] (gen-save! strategy {}))
   ([strategy opts] (impl.factories/gen-save! strategy opts insert!)))
 (defn save! [strategy obj] (impl.factories/save! strategy obj))
-(def template (impl.factories/Template.))
-(def template-section (impl.factories/TemplateSection.))
-(def template-section-property (impl.factories/TemplateSectionProperty.))
-(def user-login-token (impl.factories/UserLoginToken.))
-(def users-projects (impl.factories/UsersProjects.))
-(def project (impl.factories/Project.))
-(def user (impl.factories/User.))
+(def template (impl.factories/->Template))
+(def template-section (impl.factories/->TemplateSection))
+(def template-section-property (impl.factories/->TemplateSectionProperty))
+(def user-login-token (impl.factories/->UserLoginToken))
+(def users-projects (impl.factories/->UsersProjects))
+(def project (impl.factories/->Project))
+(def user (impl.factories/->User))

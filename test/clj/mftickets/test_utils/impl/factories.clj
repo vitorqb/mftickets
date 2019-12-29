@@ -33,7 +33,9 @@
     (save! strategy obj insert!)))
 
 ;; Implementations
-(deftype UserLoginToken []
+(deftype UserLoginToken [])
+
+(extend-type UserLoginToken
   Factory
   (gen [_ opts]
     (merge
@@ -54,7 +56,8 @@
       :created-at :createdAt}))
   (standardize-raw-obj [_ x] x))
 
-(deftype UsersProjects []
+(deftype UsersProjects [])
+(extend-type UsersProjects
   Factory
   (gen [_ opts]
     (merge {:user-id 1 :project-id 1} opts))
@@ -65,7 +68,8 @@
     (clojure.set/rename-keys opts {:user-id :userId :project-id :projectId}))
   (standardize-raw-obj [_ x] x))
 
-(deftype Project []
+(deftype Project [])
+(extend-type Project
   Factory
   (gen [_ opts]
     (merge {:id 1 :name "My Project" :description "My project description"} opts))
@@ -75,7 +79,8 @@
   (serialize-to-db [_ opts] opts)
   (standardize-raw-obj [_ x] x))
 
-(deftype User []
+(deftype User [])
+(extend-type User
   Factory
   (gen [_ opts] (merge {:id 1 :email "foo@bar.com"} opts))
 
@@ -84,7 +89,9 @@
   (serialize-to-db [_ opts] opts)
   (standardize-raw-obj [_ x] x))
 
-(deftype Template []
+
+(deftype Template [])
+(extend-type Template
   Factory
   (gen [_ opts]
     (merge
@@ -97,7 +104,8 @@
     {:id id :projectId project-id :name name :creationDate creation-date})
   (standardize-raw-obj [_ x] x))
 
-(deftype TemplateSection []
+(deftype TemplateSection [])
+(extend-type TemplateSection
   Factory
   (gen [_ opts] (merge {:id 1 :template-id 9 :name "Foo" :order 0} opts))
 
@@ -107,7 +115,8 @@
     (clojure.set/rename-keys opts {:template-id :templateId :order :orderIndex}))
   (standardize-raw-obj [_ x] x))
 
-(deftype TemplateSectionProperty []
+(deftype TemplateSectionProperty [])
+(extend-type TemplateSectionProperty
   Factory
   (gen [_ opts]
     (merge
