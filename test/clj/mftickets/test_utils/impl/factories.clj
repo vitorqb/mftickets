@@ -138,3 +138,20 @@
                                   :value-type :valueType
                                   :order :orderIndex})))
   (standardize-raw-obj [_ x] x))
+
+(deftype Ticket [])
+(extend-type Ticket
+  Factory
+  (gen [_ opts]
+    (merge
+     {:id 123718
+      :template-id 812812812
+      :created-at "2018-12-14T19:08:00"
+      :created-by-user-id 1312 }
+     opts))
+
+  DbFactory
+  (table [_] :tickets)
+  (serialize-to-db [_ {:keys [id template-id created-at created-by-user-id]}]
+    {:id id :templateId template-id :createdAt created-at :createdByUserId created-by-user-id})
+  (standardize-raw-obj [_ x] x))

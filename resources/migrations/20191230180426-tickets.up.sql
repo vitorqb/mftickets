@@ -1,0 +1,5 @@
+CREATE TABLE tickets
+(id INTEGER PRIMARY KEY,
+ templateId INTEGER NOT NULL,
+ createdAt TEXT NOT NULL,
+ createdByUserId INTEGER NOT NULL);

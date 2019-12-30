@@ -9,7 +9,8 @@
             [mftickets.core :refer [start-app]]
             [mftickets.db.core :as db.core]
             [mftickets.db.prefill :as db.prefill]
-            [mount.core :as mount]))
+            [mount.core :as mount]
+            [clojure.test :as t]))
 
 (alter-var-root #'spec/*explain-out* (constantly expound/printer))
 

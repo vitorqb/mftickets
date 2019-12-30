@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :as t :refer [are deftest is testing use-fixtures]]
             [mftickets.db.core :as db.core]
+            [mftickets.db.projects :as db.projects]
             [mftickets.db.templates :as db.templates]
             [mftickets.domain.templates :as sut]
             [mftickets.domain.templates.inject :as domain.templates.inject]
@@ -343,3 +344,10 @@
 (deftest test-delete-template
   (with-redefs [db.templates/delete-template! (fn [x] [::delete-template! x])]
     (is (= [::delete-template! {:id 1}] (sut/delete-template! {:id 1})))))
+
+(deftest test-user-has-access
+
+  (testing "Dispatches to db call"
+    (let [user {:id 1} template {:id 2}]
+      (with-redefs [db.projects/user-has-access-to-template? (fn [u t] [::access? u t])]
+        (is (= [::access? user template] (sut/user-has-access-to-template? user template)))))))

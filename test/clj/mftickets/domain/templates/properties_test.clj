@@ -7,9 +7,9 @@
 (use-fixtures :once tu/common-fixture)
 
 (deftest test-get-property-types
-  (is (= #{:domain.templates.properties/radio
-           :domain.templates.properties/text
-           :domain.templates.properties/date}
+  (is (= #{:templates.properties.types/radio
+           :templates.properties.types/text
+           :templates.properties.types/date}
          (sut/get-property-types))))
 
 (deftest test-get-properties-for-template
