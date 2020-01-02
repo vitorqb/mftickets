@@ -11,6 +11,8 @@
             [mftickets.inject :refer [inject]]
             [mftickets.test-utils :as tu]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-sections-for-template
 
   (with-redefs [db.templates.sections/get-sections-for-template identity]

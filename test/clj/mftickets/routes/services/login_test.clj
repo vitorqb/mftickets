@@ -1,21 +1,23 @@
 (ns mftickets.routes.services.login-test
-  (:require [mftickets.routes.services.login :as sut]
-            [muuntaja.core :as m]
-            [ring.util.http-response :as http-response]
-            [ring.mock.request :as mock.request]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-            [mftickets.routes.services.helpers :as services.helpers]
-            [mftickets.test-utils :as test-utils]
-            [mftickets.handler :refer [app]]
-            [mftickets.domain.users :as domain.users]
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
             [mftickets.domain.login :as domain.login]
-            [mftickets.utils.emails :as utils.emails]))
+            [mftickets.domain.users :as domain.users]
+            [mftickets.handler :refer [app]]
+            [mftickets.routes.services.helpers :as services.helpers]
+            [mftickets.routes.services.login :as sut]
+            [mftickets.test-utils :as tu]
+            [mftickets.utils.emails :as utils.emails]
+            [muuntaja.core :as m]
+            [ring.mock.request :as mock.request]
+            [ring.util.http-response :as http-response]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-handle-send-user-key
 
   (testing "Base test"
-    (test-utils/with-app
-      (test-utils/with-db
+    (tu/with-app
+      (tu/with-db
         (with-redefs [utils.emails/send-email! (constantly nil)]
           (let [resp (-> (mock.request/request :post "/api/login/send-key")
                          (mock.request/json-body {:email "foo@bar.com"})

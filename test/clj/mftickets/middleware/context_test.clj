@@ -1,8 +1,11 @@
 (ns mftickets.middleware.context-test
-  (:require [mftickets.middleware.context :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.domain.projects :as domain.projects]
             [mftickets.domain.users :as domain.users]
-            [mftickets.domain.projects :as domain.projects]))
+            [mftickets.middleware.context :as sut]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-wrap-get-project
 

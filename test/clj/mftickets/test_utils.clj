@@ -6,6 +6,7 @@
             [mftickets.db.core :as db.core]
             [mftickets.domain.projects :as domain.projects]
             [mftickets.domain.users :as domain.user]
+            mftickets.inject
             [mftickets.test-utils.impl.factories :as impl.factories]
             [mount.core :as mount]
             [muuntaja.core :as muuntaja]
@@ -26,6 +27,12 @@
                first
                :result)
       0))
+
+(defn common-fixture
+  "Common fixtures for all tests."
+  [f]
+  (mount/start #'mftickets.inject/inject)
+  (f))
 
 (defmacro with-db
   "A function to be used to tests that demand db access."

@@ -4,6 +4,8 @@
             [mftickets.test-utils :as tu]
             [clojure.spec.alpha :as spec]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-projects-for-user
 
   (testing "Base"

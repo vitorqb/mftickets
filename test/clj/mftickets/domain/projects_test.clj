@@ -5,6 +5,8 @@
             [mftickets.domain.projects :as sut]
             [mftickets.test-utils :as tu]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-project
 
   (tu/with-db

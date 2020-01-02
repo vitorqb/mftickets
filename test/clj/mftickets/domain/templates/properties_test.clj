@@ -1,7 +1,10 @@
 (ns mftickets.domain.templates.properties-test
-  (:require [mftickets.domain.templates.properties :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-            [mftickets.db.templates.properties :as db.templates.properties]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.db.templates.properties :as db.templates.properties]
+            [mftickets.domain.templates.properties :as sut]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-get-property-types
   (is (= #{:domain.templates.properties/radio

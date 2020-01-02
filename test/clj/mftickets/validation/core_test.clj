@@ -1,6 +1,9 @@
 (ns mftickets.validation.core-test
-  (:require [mftickets.validation.core :as sut]
-            [clojure.test :as t :refer [are deftest is testing use-fixtures]]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.test-utils :as tu]
+            [mftickets.validation.core :as sut]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-validate
 

@@ -1,6 +1,9 @@
 (ns mftickets.utils.kw-test
-  (:require [mftickets.utils.kw :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.test-utils :as tu]
+            [mftickets.utils.kw :as sut]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-full-name
   (testing "With ns"

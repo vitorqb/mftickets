@@ -1,6 +1,9 @@
 (ns mftickets.middleware.pagination-test
-  (:require [mftickets.middleware.pagination :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.middleware.pagination :as sut]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 ;; Helpers
 (defn- with-page-number

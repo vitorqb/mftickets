@@ -3,6 +3,8 @@
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
             [mftickets.test-utils :as tu]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-sections-for-template
 
   (tu/with-db

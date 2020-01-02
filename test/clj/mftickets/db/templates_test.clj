@@ -6,6 +6,8 @@
             [mftickets.test-utils :as tu]
             [mftickets.utils.date-time :as utils.date-time]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-raw-template
 
   (testing "When exists"
