@@ -1,7 +1,10 @@
 (ns mftickets.db.prefill-test
   (:require [mftickets.db.prefill :as sut]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-parse-args
 

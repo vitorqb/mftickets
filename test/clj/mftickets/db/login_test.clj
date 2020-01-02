@@ -6,6 +6,8 @@
             [mftickets.db.core :as db.core]
             [mftickets.test-utils :as tu]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-create-user-key!
 
   (testing "Integration"

@@ -13,6 +13,8 @@
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.test-utils :as tu]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-raw-template
 
   (testing "Base"

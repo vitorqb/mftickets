@@ -3,12 +3,14 @@
             [mftickets.domain.templates :as domain.templates]
             [mftickets.domain.templates.inject :as domain.templates.inject]
             [mftickets.domain.templates.properties :as domain.templates.properties]
+            [mftickets.domain.templates.sections :as domain.templates.sections]
             [mftickets.domain.templates.sections.inject
              :as
              domain.templates.sections.inject]
-            [mftickets.domain.templates.sections :as domain.templates.sections]))
+            [mount.core :refer [defstate]]))
 
-(def inject
+(defstate inject
+  :start 
   {::domain.projects/count-templates
    domain.templates/count-templates-for-project
 

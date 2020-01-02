@@ -1,6 +1,7 @@
 (ns user
   "Userspace functions you can run by default in your local REPL."
   (:require [clojure.spec.alpha :as spec]
+            [clojure.tools.namespace.repl :as repl]
             [conman.core :as conman]
             [expound.alpha :as expound]
             [luminus-migrations.core :as migrations]
@@ -63,5 +64,9 @@
   "Runs all prefills from mftickets.db.prefill"
   []
   (db.prefill/run-prefills! db.core/*db*))
+
+(defn refresh-all-ns! []
+  (stop)
+  (repl/refresh-all :after 'user/start))
 
 (spec/check-asserts true)

@@ -7,6 +7,8 @@
             [mftickets.middleware.context :as middleware.context]
             [mftickets.domain.projects :as domain.projects]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-handle-get
   (let [handle-get #'sut/handle-get]
     (is (= {:status 200 :body {:id 9}}

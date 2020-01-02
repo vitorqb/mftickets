@@ -3,6 +3,8 @@
             [mftickets.test-utils :as tu]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-get-project-ids-for-user
 
   (tu/with-db

@@ -26,6 +26,8 @@
             [mftickets.utils.kw :as utils.kw]
             [ring.mock.request :as mock.request]))
 
+(use-fixtures :once tu/common-fixture)
+
 (deftest test-validate-template-update
 
   (with-redefs [domain.templates/unique-template-name-for-project? (constantly true)]

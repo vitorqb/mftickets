@@ -1,12 +1,14 @@
 (ns mftickets.domain.users-test
   (:require [mftickets.domain.users :as sut]
-            [mftickets.test-utils :as test-utils]
+            [mftickets.test-utils :as tu]
             [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-create-user!
 
   (testing "Creates and gets an user"
-    (test-utils/with-db
+    (tu/with-db
       (let [user (sut/create-user! {:email "foo"})]
         (is (int? (:id user)))
         (is (= "foo" (:email user)))))))

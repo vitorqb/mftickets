@@ -1,6 +1,9 @@
 (ns mftickets.utils.transform-test
-  (:require [mftickets.utils.transform :as sut]
-            [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.test-utils :as tu]
+            [mftickets.utils.transform :as sut]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-remapkey
   (is (= {:b 1}

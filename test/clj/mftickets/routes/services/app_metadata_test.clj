@@ -1,4 +1,3 @@
-
 (ns mftickets.routes.services.app-metadata-test
   (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
             [mftickets.domain.projects :as domain.projects]
@@ -8,6 +7,8 @@
             [mftickets.test-utils :as tu]
             [mftickets.utils.kw :as utils.kw]
             [ring.mock.request :as mock.request]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-assoc-template-property-types
   (let [types #{::foo}]

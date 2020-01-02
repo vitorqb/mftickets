@@ -4,7 +4,9 @@
             [mftickets.db.core :as db.core]
             [mftickets.db.login :as db.login]
             [mftickets.utils.emails :as utils.emails]
-            [mftickets.test-utils :as test-utils]))
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-generate-random-key-value
   (with-redefs [rand-nth (constantly 1)]
@@ -70,11 +72,11 @@
 (deftest test-get-user-from-token-value
 
   (testing "Valid token"
-    (test-utils/with-db
+    (tu/with-db
       (let [user-key (sut/create-user-key! {:user-id 1 :value "foo"})]
         (sut/create-user-token! {:user-key user-key :token-value "bar"})
         (is (= 1 (sut/get-user-id-from-token-value "bar"))))))
 
   (testing "Unexistant token"
-    (test-utils/with-db
+    (tu/with-db
       (is (nil? (sut/get-user-id-from-token-value "foo"))))))

@@ -1,7 +1,10 @@
 (ns mftickets.db.core-test
   (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
             [mftickets.db.core :as sut]
-            [mftickets.middleware.pagination :as middleware.pagination]))
+            [mftickets.middleware.pagination :as middleware.pagination]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-parse-pagination-data
 

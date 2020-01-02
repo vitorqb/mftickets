@@ -1,7 +1,9 @@
 (ns mftickets.domain.templates.transform-test
-  (:require
-   [mftickets.domain.templates.transform :as sut]
-   [clojure.test :as t :refer [is are deftest testing use-fixtures]]))
+  (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.domain.templates.transform :as sut]
+            [mftickets.test-utils :as tu]))
+
+(use-fixtures :once tu/common-fixture)
 
 (deftest test-set-section-order
 
