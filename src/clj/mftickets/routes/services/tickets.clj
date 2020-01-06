@@ -42,6 +42,7 @@
                                 [{(ds/opt :id) nil?
                                   (ds/opt :ticket-id) nil?
                                   :property-id int?
-                                  (ds/opt :templates.properties.types.text/value) string?}]}}
+                                  (ds/opt :templates.properties.types.text/value) string?
+                                  (ds/opt :templates.properties.types.date/value) string?}]}}
             :handler #'handle-create}}]])
 
