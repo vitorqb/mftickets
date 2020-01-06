@@ -37,7 +37,7 @@
            :templates.properties.types.date/value "2020-01-06T12:24:11"}
 
           property-value
-          (properties-values.create/create-property-value! inject property-value-data)
+          (properties-values.create/create-property-value! property-value-data opts)
 
           result
           (properties-values.get/get-property-value opts)]

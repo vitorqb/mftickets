@@ -67,6 +67,9 @@
           inject
           {::properties-values.create.inject/get-property get-property}
 
+          opts
+          {:property property :ticket ticket}
+
           property-value-data
           {:id nil
            :property-id (:id property)
@@ -75,7 +78,7 @@
 
           property-value
           (with-redefs [date-time/now-as-str (constantly now)]
-            (properties-values.create/create-property-value! inject property-value-data))]
+            (properties-values.create/create-property-value! property-value-data opts))]
 
       (testing "Returns the gotten property value"
         (is (= (properties-values.get/get-property-value {:ticket ticket :property property})
