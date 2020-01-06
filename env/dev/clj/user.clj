@@ -12,8 +12,6 @@
             [mount.core :as mount]
             [clojure.test :as t]))
 
-(alter-var-root #'spec/*explain-out* (constantly expound/printer))
-
 (add-tap (bound-fn* clojure.pprint/pprint))
 
 (defn start 
