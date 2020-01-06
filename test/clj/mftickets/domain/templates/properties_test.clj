@@ -17,6 +17,14 @@
   (with-redefs [db.templates.properties/get-properties-for-template identity]
     (is (= {:id 1} (sut/get-properties-for-template {:id 1})))))
 
+(deftest test-get-properties-ids-set-for-template-id
+
+  (let [properties [{:id 1}]
+        template {:id 1}
+        get-properties-for-template {template properties}]
+    (with-redefs [sut/get-properties-for-template get-properties-for-template]
+      (is (= #{1} (sut/get-properties-ids-set-for-template-id (:id template)))))))
+
 (deftest test-get-properties-for-section
   (with-redefs [db.templates.properties/get-properties-for-section (fn [x] [::properties x])]
     (is (= [::properties {:id 1}]

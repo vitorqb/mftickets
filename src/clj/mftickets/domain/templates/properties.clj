@@ -18,6 +18,10 @@
   [template]
   (db.templates.properties/get-properties-for-template template))
 
+(defn get-properties-ids-set-for-template-id [template-id]
+  (or (some->> {:id template-id} get-properties-for-template (map :id) (into #{}))
+      #{}))
+
 (defn get-properties-for-templates
   "Returns a list with all properties for a list of templates."
   [template]
