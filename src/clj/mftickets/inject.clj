@@ -8,7 +8,6 @@
              :as
              domain.templates.sections.inject]
             [mount.core :refer [defstate]]
-            [mftickets.domain.tickets.inject :as domain.tickets.inject]
             [mftickets.domain.tickets.properties-values
              :as
              domain.tickets.properties-values]
@@ -62,12 +61,6 @@
    ::domain.templates.sections.inject/get-properties-for-section
    domain.templates.properties/get-properties-for-section
 
-   ::domain.tickets.inject/create-property-value!
-   domain.tickets.properties-values.create/create-property-value!
-
-   ::domain.tickets.inject/get-properties-for-ticket
-   domain.templates.properties/get-properties-for-ticket
-   
    ::domain.tickets.properties-values.create.inject/get-property
    domain.templates.properties/get-property
    })

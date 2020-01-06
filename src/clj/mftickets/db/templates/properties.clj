@@ -32,13 +32,6 @@
           get-properties-for-template*
           (->> (map parse-raw-property))))
 
-(defn get-properties-for-ticket
-  "Returns all properties for a ticket."
-  [ticket]
-  (some-> {:ticket-id (:id ticket) :select (select-snip {})}
-          get-properties-for-ticket*
-          (->> (map parse-raw-property))))
-
 (defn get-properties-for-templates-ids
   "Returns all properties for a list of templates ids"
   [templates-ids]

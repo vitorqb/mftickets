@@ -6,7 +6,6 @@
              :as
              properties-values.create]
             [mftickets.domain.tickets :as sut]
-            [mftickets.domain.tickets.inject :as inject]
             [mftickets.domain.tickets.properties-values :as properties-values]
             [mftickets.test-utils :as tu]))
 
@@ -14,26 +13,24 @@
 
 (deftest test-get-ticket
 
-  (testing "Dispatches to get-raw-ticket and get-properties-values"
+  (testing "Dispatches to get-raw-ticket"
     (let [ticket {:id 1}
           get-raw-ticket {(:id ticket) ticket}
 
           properties [{:id 3} {:id 4}]
-          m-get-properties-for-ticket {ticket properties}
+          opts {:properties properties}
 
           properties-values [{:id 5} {:id 6}]
           m-get-properties-values (fn [{ticket* :ticket properties* :properties}]
                                     (and (= ticket ticket*)
                                          (= properties* properties)
-                                         properties-values))
-
-          inject {::inject/get-properties-for-ticket m-get-properties-for-ticket}]
+                                         properties-values))]
 
       (with-redefs [db.tickets/get-raw-ticket get-raw-ticket
                     properties-values/get-properties-values m-get-properties-values]
 
         (is (= (assoc ticket :properties-values properties-values)
-               (sut/get-ticket inject (:id ticket))))))))
+               (sut/get-ticket (:id ticket) opts)))))))
 
 (deftest test-create-ticket-properties-values!
 
@@ -44,14 +41,14 @@
         property1 {:id 1}
         property-value-2 {:id nil :property-id 2 :value "This is a date"}
         property2 {:id 2}
-        get-properties-for-ticket (constantly [property1 property2])
+        properties [property1 property2]
         properties-values [property-value-1 property-value-2]
         raw-ticket {:id 1}
-        inject {::inject/get-properties-for-ticket get-properties-for-ticket}]
+        opts {:properties properties}]
 
     (with-redefs [db.core/run-effects! run-effects sut/get-ticket get-ticket]
 
-      (let [result (#'sut/create-ticket-properties-values! inject properties-values raw-ticket)]
+      (let [result (#'sut/create-ticket-properties-values! properties-values raw-ticket opts)]
 
         (testing "Delegates to create-property-value!"
           (let [assoc-ticket-id #(assoc % :ticket-id (:id raw-ticket))]
@@ -69,8 +66,9 @@
 (deftest test-create-ticket!
 
   (testing "Delegates to db.create-raw-ticket!"
-    (let [inject {::inject 1} ticket-data {::ticket-data 1 :properties-values ::vals}]
+    (let [opts {:properties [{:id 1}]}
+          ticket-data {::ticket-data 1 :properties-values ::vals}]
       (with-redefs [db.core/run-effects! (fn [& xs] xs)]
         (is (= [[db.tickets/create-raw-ticket! ticket-data]
-                [@#'sut/create-ticket-properties-values! inject ::vals ::db.core/<]]
-               (sut/create-ticket! inject ticket-data)))))))
+                [@#'sut/create-ticket-properties-values! ::vals ::db.core/< opts]]
+               (sut/create-ticket! ticket-data opts)))))))

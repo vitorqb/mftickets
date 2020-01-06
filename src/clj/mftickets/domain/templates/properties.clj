@@ -18,11 +18,6 @@
   [template]
   (db.templates.properties/get-properties-for-template template))
 
-(defn get-properties-for-ticket
-  "Returns a list with all properties for a ticket (i.e. properties for the ticket's template)"
-  [ticket]
-  (db.templates.properties/get-properties-for-ticket ticket))
-
 (defn get-properties-for-templates
   "Returns a list with all properties for a list of templates."
   [template]
