@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as spec]
             [com.rpl.specter :as s]
             [mftickets.db.core :as db.core]
+            [mftickets.db.projects :as db.projects]
             [mftickets.db.templates :as db.templates]
             [mftickets.domain.templates.inject :as domain.templates.inject]
             [mftickets.middleware.pagination :as middleware.pagination]))
@@ -183,3 +184,6 @@
 (defn delete-template!
   [template]
   (db.templates/delete-template! template))
+
+(defn user-has-access-to-template? [user template]
+  (db.projects/user-has-access-to-template? user template))

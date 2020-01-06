@@ -76,3 +76,23 @@
 
       (testing "Deletes the userProject"
         (is (zero? (tu/count! "FROM usersProjects WHERE projectId=?" (:id project))))))))
+
+(deftest test-user-has-access-to-template?
+
+  (testing "Template that does not exist"
+    (tu/with-db
+      (tu/with-user-and-token [user _ _]
+        (let [template {:id 1289123}]
+          (is (false? (sut/user-has-access-to-template? user template)))))))
+
+  (testing "Template that exists but user has no right"
+    (tu/with-db
+      (tu/with-user-and-token [user _ project]
+        (let [template (tu/gen-save! tu/template {:project-id (-> project :id inc)})]
+          (is (false? (sut/user-has-access-to-template? user template)))))))
+
+  (testing "Template that exists and user has right"
+    (tu/with-db
+      (tu/with-user-and-token [user _ project]
+        (let [template (tu/gen-save! tu/template {:project-id (:id project)})]
+          (is (true? (sut/user-has-access-to-template? user template))))))))

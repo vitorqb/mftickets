@@ -5,6 +5,7 @@
             [mftickets.utils.date-time :as utils.date-time]
             [mftickets.utils.transform :as utils.transform]))
 
+;; !!!! TODO -> Export this from db.core
 (conman/bind-connection db.core/*db* "sql/queries/templates.sql")
 
 (defn get-raw-template

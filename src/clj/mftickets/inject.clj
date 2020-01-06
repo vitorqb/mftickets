@@ -7,8 +7,26 @@
             [mftickets.domain.templates.sections.inject
              :as
              domain.templates.sections.inject]
-            [mount.core :refer [defstate]]))
+            [mount.core :refer [defstate]]
+            [mftickets.domain.tickets.inject :as domain.tickets.inject]
+            [mftickets.domain.tickets.properties-values
+             :as
+             domain.tickets.properties-values]
+            [mftickets.domain.tickets.properties-values.create
+             :as
+             domain.tickets.properties-values.create]
+            [mftickets.domain.tickets.properties-values.create.inject
+             :as
+             domain.tickets.properties-values.create.inject]
+            [mftickets.domain.tickets.properties-values.get
+             :as
+             domain.tickets.properties-values.get]
+            [mftickets.domain.tickets.properties-values.get.inject
+             :as
+             domain.tickets.properties-values.get.inject]))
 
+;; !!!! TODO -> Don't use injection for hierarchical imports, like
+;; !!!!         templates -> templates.properties
 (defstate inject
   :start 
   {::domain.projects/count-templates
@@ -38,7 +56,18 @@
    ::domain.templates.sections.inject/delete-property!
    domain.templates.properties/delete-property!
 
+   ::domain.tickets.properties-values.get.inject/get-property
+   domain.templates.properties/get-property
+
    ::domain.templates.sections.inject/get-properties-for-section
    domain.templates.properties/get-properties-for-section
 
+   ::domain.tickets.inject/create-property-value!
+   domain.tickets.properties-values.create/create-property-value!
+
+   ::domain.tickets.inject/get-properties-for-ticket
+   domain.templates.properties/get-properties-for-ticket
+   
+   ::domain.tickets.properties-values.create.inject/get-property
+   domain.templates.properties/get-property
    })

@@ -37,3 +37,10 @@
   [{:keys [id]}]
   (delete-project!* {:id id})
   (delete-all-users-for-project!* {:id id}))
+
+(defn user-has-access-to-template?
+  "Returns whether a user has access to a given template."
+  [user template]
+  (let [opts {:user-id (:id user) :template-id (:id template)}]
+    (or (some-> opts user-has-access-to-template?* :response (= 1))
+        false)))

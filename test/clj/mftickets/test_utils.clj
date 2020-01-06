@@ -32,7 +32,8 @@
   "Common fixtures for all tests."
   [f]
   (mount/start #'mftickets.inject/inject)
-  (f))
+  (f)
+  (mount/stop #'mftickets.inject/inject))
 
 (defmacro with-db
   "A function to be used to tests that demand db access."
@@ -93,6 +94,7 @@
   ([strategy opts] (impl.factories/gen-save! strategy opts insert!)))
 (defn save! [strategy obj] (impl.factories/save! strategy obj))
 (def template (impl.factories/->Template))
+(def ticket (impl.factories/->Ticket))
 (def template-section (impl.factories/->TemplateSection))
 (def template-section-property (impl.factories/->TemplateSectionProperty))
 (def user-login-token (impl.factories/->UserLoginToken))

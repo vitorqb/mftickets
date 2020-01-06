@@ -42,6 +42,12 @@
      (jdbc/db-set-rollback-only! *db*)
      ~@body))
 
+(defmacro with-transaction
+  "Runs body inside a transaction."
+  [& body]
+  `(conman/with-transaction [*db*]
+     ~@body))
+
 (defn get-id-from-insert
   "Returns the last inserted id from an sqlite insert."
   [x]

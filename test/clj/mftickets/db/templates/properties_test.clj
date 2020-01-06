@@ -23,6 +23,30 @@
         (is (= [template-section-property]
                (sut/get-properties-for-template {:id 9})))))))
 
+(deftest test-get-properties-for-ticket
+
+  (testing "Unknown id"
+    (tu/with-db
+      (is (= [] (sut/get-properties-for-ticket {:id 1})))))
+
+  (testing "Base"
+    (tu/with-db
+      (let [template (tu/gen-save! tu/template)
+            template-section1 (tu/gen-save! tu/template-section {:id 1 :template-id (:id template)})
+            property1 (tu/gen-save! tu/template-section-property
+                                    {:id 2
+                                     :template-section-id (:id template-section1)})
+            property2 (tu/gen-save! tu/template-section-property
+                                    {:id 3
+                                     :template-section-id (:id template-section1)})
+            template-section2 (tu/gen-save! tu/template-section {:id 2 :template-id (:id template)})
+            property3 (tu/gen-save! tu/template-section-property
+                                    {:id 4
+                                     :template-section-id (:id template-section2)})
+            ticket (tu/gen-save! tu/ticket {:template-id (:id template)})]
+        (is (= [property1 property2 property3]
+               (sut/get-properties-for-ticket ticket)))))))
+
 (deftest test-get-properties-for-templates-ids
 
   (testing "Empty"

@@ -3,18 +3,25 @@
    [mftickets.db.templates.properties :as db.templates.properties]
    [com.rpl.specter :as s]))
 
+(defn get-property [id] (db.templates.properties/get-property id))
+
 (defn get-property-types
   "Returns a set of all template property types."
   []
   ;; Eventually there may be registration logic here, but for now this is enough!
-  #{:domain.templates.properties/radio
-    :domain.templates.properties/text
-    :domain.templates.properties/date})
+  #{:templates.properties.types/radio
+    :templates.properties.types/text
+    :templates.properties.types/date})
 
 (defn get-properties-for-template
   "Returns a list with all properties for a template."
   [template]
   (db.templates.properties/get-properties-for-template template))
+
+(defn get-properties-for-ticket
+  "Returns a list with all properties for a ticket (i.e. properties for the ticket's template)"
+  [ticket]
+  (db.templates.properties/get-properties-for-ticket ticket))
 
 (defn get-properties-for-templates
   "Returns a list with all properties for a list of templates."

@@ -14,6 +14,14 @@ FROM templateSectionProperties as properties
 JOIN templateSections ON templateSections.id = properties.templateSectionId
 WHERE templateSections.templateId = :template-id;
 
+-- :name get-properties-for-ticket* :result :*
+-- :doc Gets all properties for a ticket
+:snip:select
+JOIN templateSections ON templateSections.id = properties.templateSectionId
+JOIN templates ON templates.id = templateSections.templateId
+JOIN tickets ON templates.id = tickets.templateId
+WHERE tickets.id = :ticket-id;
+
 -- :name get-properties-for-section* :result :*
 -- :doc Gets all properties for a section
 :snip:select
