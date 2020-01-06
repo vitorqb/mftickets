@@ -8,6 +8,7 @@
             [mftickets.routes.services.tickets.validation.create
              :as
              tickets.validation.create]
+            [mftickets.utils.date-time :as utils.date-time]
             [mftickets.validation.core :as validation]
             [spec-tools.data-spec :as ds]))
 
@@ -44,16 +45,21 @@
 
 (def routes
   [[""
-    {:post {:summary "Creates a ticket"
-            :parameters {:body {(ds/opt :id) nil?
-                                :template-id int?
-                                (ds/opt :created-at) nil?
-                                (ds/opt :created-by-user-id) nil?
-                                :properties-values
-                                [{(ds/opt :id) nil?
-                                  (ds/opt :ticket-id) nil?
-                                  :property-id int?
-                                  (ds/opt :templates.properties.types.text/value) string?
-                                  (ds/opt :templates.properties.types.date/value) string?}]}}
-            :handler #'handle-create}}]])
+    {:post {:summary
+            "Creates a ticket"
+
+            :parameters
+            {:body {(ds/opt :id) nil?
+                    :template-id int?
+                    (ds/opt :created-at) nil?
+                    (ds/opt :created-by-user-id) nil?
+                    :properties-values
+                    [{(ds/opt :id) nil?
+                      (ds/opt :ticket-id) nil?
+                      :property-id int?
+                      (ds/opt :templates.properties.types.text/value) string?
+                      (ds/opt :templates.properties.types.date/value) utils.date-time/date-str?}]}}
+            
+            :handler
+            #'handle-create}}]])
 
