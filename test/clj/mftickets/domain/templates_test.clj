@@ -7,10 +7,25 @@
             [mftickets.domain.templates :as sut]
             [mftickets.domain.templates.inject :as domain.templates.inject]
             [mftickets.domain.templates.properties :as domain.templates.properties]
+            [mftickets.domain.templates.properties.create
+             :as
+             domain.templates.properties.create]
+            [mftickets.domain.templates.properties.get
+             :as
+             domain.templates.properties.get]
+            [mftickets.domain.templates.properties.update
+             :as
+             domain.templates.properties.update]
             [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.templates.sections.create
+             :as
+             domain.templates.sections.create]
             [mftickets.domain.templates.sections.inject
              :as
              domain.templates.sections.inject]
+            [mftickets.domain.templates.sections.update
+             :as
+             domain.templates.sections.update]
             [mftickets.middleware.pagination :as middleware.pagination]
             [mftickets.test-utils :as tu]))
 
@@ -202,12 +217,17 @@
 
 (deftest test-update-template!
 
-  (let [properties [{:id 789
+  (let [radio-opt {:id 1
+                   :value "Foo"
+                   :property-id 789}
+        
+        properties [{:id 789
                      :name "Property"
                      :template-section-id 456
                      :value-type :templates.properties.types/radio
                      :is-multiple false
-                     :order 0}]
+                     :order 0
+                     :templates.properties.types.radio/options [radio-opt]}]
         sections [{:id 456
                    :template-id 123
                    :name "Section"
@@ -219,13 +239,13 @@
                       :creation-date "2019-01-01T00:00:00"
                       :sections sections}
         old-template new-template
-        update-section! domain.templates.sections/update-section!
-        create-section! domain.templates.sections/create-section!
+        update-section! domain.templates.sections.update/update-section!
+        create-section! domain.templates.sections.create/create-section!
         delete-section! domain.templates.sections/delete-section!
-        create-property! domain.templates.properties/create-property!
-        update-property! domain.templates.properties/update-property!
+        create-property! domain.templates.properties.create/create-property!
+        update-property! domain.templates.properties.update/update-property!
         delete-property! domain.templates.properties/delete-property!
-        get-properties-for-section domain.templates.properties/get-properties-for-section
+        get-properties-for-section domain.templates.properties.get/get-properties-for-section
         inject {::domain.templates.inject/update-section! update-section!
                 ::domain.templates.inject/create-section! create-section!
                 ::domain.templates.inject/delete-section! delete-section!
@@ -241,6 +261,7 @@
           (tu/gen-save! tu/template (dissoc old-template :sections))
           (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
           (tu/gen-save! tu/template-section-property (first properties))
+          (tu/gen-save! tu/template-section-property-radio-option radio-opt)
           (sut/update-template! inject old-template new-template)
           (is (= "FOO" (-> new-template :id sut/get-raw-template :name))))))
 
@@ -255,7 +276,7 @@
           (let [new-sections* (domain.templates.sections/get-sections-for-template new-template)]
             (is (= 1 (count new-sections*)))
             (is (= (first new-sections) (-> new-sections* first (dissoc :id)))))
-          (is (= [] (domain.templates.properties/get-properties-for-template new-template))))))
+          (is (= [] (domain.templates.properties.get/get-properties-for-template new-template))))))
 
     (testing "Removes one property and appends a new one"
       (let [new-properties [{:name "New Property"
@@ -270,7 +291,7 @@
           (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
           (tu/gen-save! tu/template-section-property (first properties))
           (sut/update-template! inject old-template new-template)
-          (let [new-properties* (domain.templates.properties/get-properties-for-template new-template)]
+          (let [new-properties* (domain.templates.properties.get/get-properties-for-template new-template)]
             (is (= 1 (count new-properties*)))
             (is (= (first new-properties)
                    (-> new-properties* first (dissoc :id))))))))
@@ -283,9 +304,10 @@
           (tu/gen-save! tu/template (dissoc old-template :sections))
           (tu/gen-save! tu/template-section (-> sections first (dissoc :properties)))
           (tu/gen-save! tu/template-section-property (first properties))
+          (tu/gen-save! tu/template-section-property-radio-option radio-opt)
           (sut/update-template! inject old-template new-template)
           (is (= new-properties
-                 (domain.templates.properties/get-properties-for-template new-template))))))))
+                 (domain.templates.properties.get/get-properties-for-template new-template))))))))
 
 (deftest test-get-template
   (let [template {:id 1}
@@ -302,11 +324,11 @@
 
 (deftest test-create-sections-for-new-template
 
-  (with-redefs [db.core/run-effects! (fn [& xs] xs)]
+  (with-redefs [db.core/run-effects! (fn [& xs] xs)
+                domain.templates.sections.create/create-section! #(do ::create-section)]
 
-    (let [create-section! #(do ::create-section)
-          inject {::domain.templates.inject/create-section! create-section!}
-          created-template {:id 1}]
+    (let [created-template {:id 1}
+          inject {:foo 1}]
 
       (testing "Empty"
         (is (= [[sut/get-template inject (:id created-template)]]
@@ -316,8 +338,12 @@
         (let [section1 {:id 1}
               section2 {:id 2}
               sections [section1 section2]]
-          (is (= [[create-section! inject (assoc section1 :template-id (:id created-template))]
-                  [create-section! inject (assoc section2 :template-id (:id created-template))]
+          (is (= [[domain.templates.sections.create/create-section!
+                   inject
+                   (assoc section1 :template-id (:id created-template))]
+                  [domain.templates.sections.create/create-section!
+                   inject
+                   (assoc section2 :template-id (:id created-template))]
                   [sut/get-template inject (:id created-template)]]
                  (sut/create-sections-for-new-template inject sections created-template))))))))
 

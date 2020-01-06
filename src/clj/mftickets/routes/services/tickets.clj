@@ -2,6 +2,7 @@
   (:require [clojure.core.match :as match]
             [mftickets.domain.templates :as domain.templates]
             [mftickets.domain.templates.properties :as domain.properties]
+            [mftickets.domain.templates.properties.get :as domain.properties.get]
             [mftickets.domain.tickets :as domain.tickets]
             [mftickets.http.responses :as http.responses]
             [mftickets.inject :as inject]
@@ -25,7 +26,7 @@
   (->> ticket-data
        :template-id
        (domain.templates/get-template inject/inject)
-       domain.properties/get-properties-for-template))
+       domain.properties.get/get-properties-for-template))
 
 (defn- create-ticket!
   "Small wrapper around `create-ticket` that extracts info from the request"

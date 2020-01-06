@@ -34,7 +34,6 @@
 
 ;; Implementations
 (deftype UserLoginToken [])
-
 (extend-type UserLoginToken
   Factory
   (gen [_ opts]
@@ -130,13 +129,32 @@
 
   DbFactory
   (table [_] :templateSectionProperties)
-  (serialize-to-db [_ opts]
+  (serialize-to-db [this opts]
     (-> opts
+        (select-keys [:id :template-section-id :name :is-multiple :value-type :order])
         (update :value-type utils.kw/full-name)
         (clojure.set/rename-keys {:template-section-id :templateSectionId
                                   :is-multiple :isMultiple
                                   :value-type :valueType
                                   :order :orderIndex})))
+  (standardize-raw-obj [_ x] x))
+
+(deftype TemplateSectionPropertyRadioOption [])
+(extend-type TemplateSectionPropertyRadioOption
+  Factory
+  (gen [_ opts]
+    (merge
+     {:id 1
+      :value "Foo"
+      :property-id 1}
+     opts))
+
+  DbFactory
+  (table [_] :templatePropertiesRadioOptions)
+  (serialize-to-db [_ opts]
+    (-> opts
+        (select-keys [:id :value :property-id])
+        (clojure.set/rename-keys {:property-id :propertyId})))
   (standardize-raw-obj [_ x] x))
 
 (deftype Ticket [])

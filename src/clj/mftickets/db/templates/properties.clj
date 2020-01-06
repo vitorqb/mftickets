@@ -25,29 +25,29 @@
       (update :is-multiple #(if % 1 0))
       (update :order #(or % nil))))
 
-(defn get-properties-for-template
+(defn get-generic-properties-for-template
   "Returns all properties for a template."
   [template]
   (some-> {:template-id (:id template) :select (select-snip {})}
-          get-properties-for-template*
+          get-generic-properties-for-template*
           (->> (map parse-raw-property))))
 
-(defn get-properties-for-templates-ids
+(defn get-generic-properties-for-templates-ids
   "Returns all properties for a list of templates ids"
   [templates-ids]
   (some-> {:templates-ids templates-ids :select (select-snip {})}
-          get-properties-for-templates-ids*
+          get-generic-properties-for-templates-ids*
           (->> (map parse-raw-property))))
 
-(defn get-properties-for-section [{id :id}]
+(defn get-generic-properties-for-section [{id :id}]
   (some-> {:section-id id :select (select-snip {})}
-          get-properties-for-section*
+          get-generic-properties-for-section*
           (->> (map parse-raw-property))))
 
-(defn get-property
+(defn get-generic-property
   [id]
   (some-> {:id id :select (select-snip {})}
-          get-property*
+          get-generic-property*
           parse-raw-property))
 
 (defn delete-property!
@@ -55,10 +55,31 @@
   [property]
   (delete-property!* {:id (:id property)}))
 
-(defn update-property!
+(defn update-property-generic-data!
   [property]
-  (-> property serialize-property-to-db update-property!*))
+  (-> property serialize-property-to-db update-property-generic-data!*))
 
-(defn create-property!
+(defn create-generic-property!
   [property]
-  (-> property serialize-property-to-db create-property!* db.core/get-id-from-insert get-property))
+  (-> property
+      serialize-property-to-db
+      create-generic-property!*
+      db.core/get-id-from-insert
+      get-generic-property))
+
+(defn create-radio-options! [options]
+  (db.core/with-transaction
+    (doseq [option options]
+      (create-radio-option!* option)))
+  nil)
+
+(defn get-radio-options [property]
+  (some->> {:property-id (:id property)}
+           get-radio-options*
+           (map #(clojure.set/rename-keys % {:propertyid :property-id}))))
+
+(defn update-radio-options! [property]
+  (db.core/with-transaction
+    (delete-all-radio-options-for-property!* {:property-id (:id property)})
+    (create-radio-options! (:templates.properties.types.radio/options property)))
+  nil)

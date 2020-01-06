@@ -95,6 +95,7 @@
 (def ticket (impl.factories/->Ticket))
 (def template-section (impl.factories/->TemplateSection))
 (def template-section-property (impl.factories/->TemplateSectionProperty))
+(def template-section-property-radio-option (impl.factories/->TemplateSectionPropertyRadioOption))
 (def user-login-token (impl.factories/->UserLoginToken))
 (def users-projects (impl.factories/->UsersProjects))
 (def project (impl.factories/->Project))

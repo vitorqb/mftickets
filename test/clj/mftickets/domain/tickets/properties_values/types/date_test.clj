@@ -3,9 +3,6 @@
             [mftickets.domain.tickets.properties-values.create
              :as
              properties-values.create]
-            [mftickets.domain.tickets.properties-values.create.inject
-             :as
-             properties-values.create.inject]
             [mftickets.domain.tickets.properties-values.get
              :as
              properties-values.get]
@@ -20,12 +17,6 @@
 
           property
           {:id 222 :value-type sut/value-type}
-
-          get-property
-          (constantly property)
-
-          inject
-          {::properties-values.create.inject/get-property get-property}
 
           opts
           {:property property :ticket ticket}
