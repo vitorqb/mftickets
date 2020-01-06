@@ -1,5 +1,7 @@
 (ns mftickets.routes.services.tickets
   (:require [clojure.core.match :as match]
+            [mftickets.domain.templates :as domain.templates]
+            [mftickets.domain.templates.properties :as domain.properties]
             [mftickets.domain.tickets :as domain.tickets]
             [mftickets.http.responses :as http.responses]
             [mftickets.inject :as inject]
@@ -18,10 +20,19 @@
   (let [data {:old-ticket nil :new-ticket (request->ticket-data request)}]
     (validation/validate tickets.validation.create/validations data)))
 
+(defn- get-properties-for-ticket-data [ticket-data]
+  (->> ticket-data
+       :template-id
+       (domain.templates/get-template inject/inject)
+       domain.properties/get-properties-for-template))
+
 (defn- create-ticket!
   "Small wrapper around `create-ticket` that extracts info from the request"
   [request]
-  (->> request request->ticket-data (domain.tickets/create-ticket! inject/inject)))
+  (let [ticket-data (request->ticket-data request)
+        properties (get-properties-for-ticket-data ticket-data)
+        create-opts {:properties properties}]
+    (domain.tickets/create-ticket! ticket-data create-opts)))
 
 ;; Handlers
 (defn- handle-create

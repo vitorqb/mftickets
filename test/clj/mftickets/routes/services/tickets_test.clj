@@ -1,5 +1,6 @@
 (ns mftickets.routes.services.tickets-test
   (:require [clojure.test :as t :refer [are deftest is testing use-fixtures]]
+            [mftickets.domain.templates.properties :as domain.properties]
             [mftickets.domain.tickets :as domain.tickets]
             [mftickets.handler :refer [app]]
             [mftickets.http.responses :as http.responses]
@@ -22,11 +23,15 @@
                      :created-by-user-id nil
                      :properties-values [{}]}
         user {:id 2}
-        request {:mftickets.auth/user user :parameters {:body ticket-data}}]
+        request {:mftickets.auth/user user :parameters {:body ticket-data}}
+        properties [{:id 1} {:id 2}]]
 
-    (testing "Calls create-ticket! after associng user id"
-      (with-redefs [domain.tickets/create-ticket! (fn [x y] [::create-ticket x y])]
-        (is (= [::create-ticket inject/inject (assoc ticket-data :created-by-user-id (:id user))]
+    (testing "Calls create-ticket! after associng user id and opts"
+      (with-redefs [domain.tickets/create-ticket! (fn [x y] [::create-ticket x y])
+                    sut/get-properties-for-ticket-data (constantly properties)]
+        (is (= [::create-ticket
+                (assoc ticket-data :created-by-user-id (:id user))
+                {:properties properties}]
                (#'sut/create-ticket! request)))))))
 
 (deftest test-handle-create

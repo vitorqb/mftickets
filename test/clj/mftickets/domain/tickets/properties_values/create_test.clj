@@ -18,12 +18,12 @@
         m-run-effects! (fn [& xs] (swap! db-effects conj xs))
         m-get-property-value (fn [x] [::get x])
         value-type :templates.properties.types/text
-        get-property {9 {:id 9 :value-type value-type}}
-        inject {::properties-values.create.inject/get-property get-property}
+        property {:id 9 :value-type value-type}
+        opts {:property property :ticket ticket}
         property-value-data {:property-id 9 :ticket-id (:id ticket)}
         result (with-redefs [db.core/run-effects! m-run-effects!
                              domain.properties-values.get/get-property-value m-get-property-value]
-                 (sut/create-property-value! inject property-value-data))]
+                 (sut/create-property-value! property-value-data opts))]
   
     (testing "Dispatches to create generic property value"
       (is (= [db.properties-values/create-generic-property-value! property-value-data]
@@ -34,4 +34,4 @@
              (-> @db-effects first second))))
 
     (testing "Calls get properties-values"
-      (is (= [::get {:property (get-property 9) :ticket ticket}] result)))))
+      (is (= [::get {:property property :ticket ticket}] result)))))
