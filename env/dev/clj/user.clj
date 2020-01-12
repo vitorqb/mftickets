@@ -68,4 +68,8 @@
   (stop)
   (repl/refresh-all :after 'user/start))
 
+(defn run-all-tests! []
+  (refresh-all-ns!)
+  (t/run-all-tests))
+
 (spec/check-asserts true)
