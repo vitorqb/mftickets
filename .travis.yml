@@ -1,4 +1,4 @@
-script: echo '{:test true}' >test-config.edn && lein test
+script: echo '{:test true}' >test-config.edn && lein run-tests
 language: clojure
 cache:
   directories:
