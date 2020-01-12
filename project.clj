@@ -65,6 +65,10 @@
                   :injections [(require 'pjstadig.humane-test-output)
                                (pjstadig.humane-test-output/activate!)]}
    :project/test {:jvm-opts ["-Dconf=test-config.edn"]
-                  :resource-paths ["env/test/resources"]}
+                  :resource-paths ["env/test/resources"]
+                  :source-paths ["env/test/clj"]}
    :profiles/dev {}
-   :profiles/test {}})
+   :profiles/test {}}
+
+  :aliases
+  {"run-tests" ["with-profile" "+test" ["run" "-m" "mftickets.system/run-tests"]]})

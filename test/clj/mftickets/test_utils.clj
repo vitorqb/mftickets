@@ -1,7 +1,6 @@
 (ns mftickets.test-utils
   (:require [clojure.java.jdbc :as jdbc]
             [conman.core :as conman]
-            [luminus-migrations.core :as migrations]
             [mftickets.config :as config]
             [mftickets.db.core :as db.core]
             [mftickets.domain.projects :as domain.projects]
@@ -40,7 +39,6 @@
   [& body]
   `(do
      (binding [mftickets.db.core/*db* (conman/connect! {:jdbc-url ,test-db})] 
-       (migrations/migrate ["migrate"] {:database-url ,test-db})
        (db.core/with-rollback
          ~@body)
        (conman/disconnect! mftickets.db.core/*db*))))
