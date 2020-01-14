@@ -5,6 +5,8 @@
             [mftickets.db.projects :as db.projects]
             [mftickets.db.templates :as db.templates]
             [mftickets.domain.templates.inject :as domain.templates.inject]
+            [mftickets.domain.templates.sections :as domain.templates.sections]
+            [mftickets.domain.templates.sections.create :as domain.templates.sections.create]
             [mftickets.middleware.pagination :as middleware.pagination]))
 
 ;; Fns
@@ -162,12 +164,9 @@
 (defn create-sections-for-new-template
   "Creates all sections for a newly-created template.
   Returns the entire template saved, including the sections."
-  [{::domain.templates.inject/keys [create-section!] :as inject} sections created-template]
-
-  {:pre [(ifn? create-section!)]}
-  
+  [inject sections created-template]  
   (let [sections* (map #(assoc % :template-id (:id created-template)) sections)
-        effects (map (fn [s] [create-section! inject s]) sections*)
+        effects (map (fn [s] [domain.templates.sections.create/create-section! inject s]) sections*)
         effects (concat effects [[get-template inject (:id created-template)]])]
     (apply db.core/run-effects! effects)))
 

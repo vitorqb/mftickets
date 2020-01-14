@@ -476,6 +476,9 @@
                 body
                 (tu/decode-response-body response)]
 
+            (testing "Returns 200"
+              (is (= 200 (:status response))))
+
             (testing "Returns body with... "
 
               (testing "Id"

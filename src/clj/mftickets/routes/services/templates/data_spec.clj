@@ -11,29 +11,26 @@
   com.rpl.specter.protocols/ImplicitNav
   (implicit-nav [this] (-> this :k com.rpl.specter.protocols/implicit-nav)))
 
+(def radio-property-option
+  {(ds/opt :id) (spec/nilable int?)
+   :value string?
+   (ds/opt :property-id) (spec/nilable int?)})
+
 (def template
-  {:id int?
+  {(ds/opt :id) (spec/nilable int?)
    :project-id int?
    :name string?
-   :creation-date string?
+   (ds/opt :creation-date) (spec/nilable string?)
    :sections
-   [{(ds/opt :id) (spec/or :int int? :nil nil?)
-     :template-id int?
+   [{(ds/opt :id) (spec/nilable int?)
+     (ds/opt :template-id) (spec/nilable int?)
      :name string?
      :order (spec/nilable integer?)
      :properties
-     [{(ds/opt :id) (spec/or :int int? :nil nil?)
-       (ds/opt :template-section-id) (spec/or :int int? :nil nil?)
+     [{(ds/opt :id) (spec/nilable int?)
+       (ds/opt :template-section-id) (spec/nilable int?)
        :name string?
        :is-multiple boolean?
        :value-type keyword?
-       :order (spec/nilable integer?)}]}]})
-
-(def create-template
-  (->> template
-       (s/setval :id nil?)
-       (s/setval :creation-date nil?)
-       (s/setval [:sections s/FIRST (ds/opt :id)] nil?)
-       (s/setval [:sections s/FIRST (ds/opt :template-id)] nil?)
-       (s/setval [:sections s/FIRST :properties s/FIRST (ds/opt :id)] nil?)
-       (s/setval [:sections s/FIRST :properties s/FIRST (ds/opt :template-section-id)] nil?)))
+       :order (spec/nilable integer?)
+       (ds/opt :templates.properties.types.radio/options) [radio-property-option]}]}]})

@@ -5,15 +5,15 @@
 
 (use-fixtures :once tu/common-fixture)
 
-(deftest test-get-properties-for-template
+(deftest test-get-generic-properties-for-template
 
   (testing "Empty"
     (tu/with-db
-      (is (= [] (sut/get-properties-for-template {:id 1})))))
+      (is (= [] (sut/get-generic-properties-for-template {:id 1})))))
 
   (testing "Empty (unkown id)"
     (tu/with-db
-      (is (= [] (sut/get-properties-for-template {:id 999})))))
+      (is (= [] (sut/get-generic-properties-for-template {:id 999})))))
 
   (testing "Base"
     (tu/with-db
@@ -21,13 +21,13 @@
       (let [template-section-property (tu/gen-save! tu/template-section-property
                                                     {:template-section-id 1})]
         (is (= [template-section-property]
-               (sut/get-properties-for-template {:id 9})))))))
+               (sut/get-generic-properties-for-template {:id 9})))))))
 
-(deftest test-get-properties-for-templates-ids
+(deftest test-get-generic-properties-for-templates-ids
 
   (testing "Empty"
     (tu/with-db
-      (is (= [] (sut/get-properties-for-templates-ids (range 0 10))))))
+      (is (= [] (sut/get-generic-properties-for-templates-ids (range 0 10))))))
 
   (testing "Base"
     (tu/with-db
@@ -54,29 +54,29 @@
             properties
             [property1 property2 property3]]
 
-        (is (= [] (sut/get-properties-for-templates-ids [])))
-        (is (= [] (sut/get-properties-for-templates-ids [888])))
+        (is (= [] (sut/get-generic-properties-for-templates-ids [])))
+        (is (= [] (sut/get-generic-properties-for-templates-ids [888])))
         (is (= [property1 property2 property3]
-               (sut/get-properties-for-templates-ids [0 1 2 3])))))))
+               (sut/get-generic-properties-for-templates-ids [0 1 2 3])))))))
 
-(deftest test-get-properties-for-section
+(deftest test-get-generic-properties-for-section
 
   (testing "Empty"
     (tu/with-db
-      (is (= [] (sut/get-properties-for-section {:id 999})))))
+      (is (= [] (sut/get-generic-properties-for-section {:id 999})))))
 
   (testing "Base"
     (tu/with-db
       (let [section (tu/gen-save! tu/template-section)
             property-args {:template-section-id (:id section)}
             property (tu/gen-save! tu/template-section-property property-args)]
-        (is (= [property] (sut/get-properties-for-section section)))))))
+        (is (= [property] (sut/get-generic-properties-for-section section)))))))
 
-(deftest test-get-property
+(deftest test-get-generic-property
 
   (tu/with-db
     (let [property (tu/gen-save! tu/template-section-property {})]
-      (is (= property (sut/get-property (:id property)))))))
+      (is (= property (sut/get-generic-property (:id property)))))))
 
 (deftest test-delete-property
 
@@ -84,11 +84,11 @@
     (let [section (tu/gen-save! tu/template-section {})
           property (tu/gen-save! tu/template-section-property
                                  {:template-section-id (:id section)})]
-      (is (= [property] (sut/get-properties-for-templates-ids [(:template-id section)])))
+      (is (= [property] (sut/get-generic-properties-for-templates-ids [(:template-id section)])))
       (sut/delete-property! property)
-      (is (= [] (sut/get-properties-for-templates-ids [(:template-id section)]))))))
+      (is (= [] (sut/get-generic-properties-for-templates-ids [(:template-id section)]))))))
 
-(deftest test-update-property
+(deftest test-update-generic-property
 
   (tu/with-db
     (let [raw-property {:id 1
@@ -109,9 +109,9 @@
                  :order 999)
 
           _
-          (sut/update-property! new-raw-property)]
+          (sut/update-property-generic-data! new-raw-property)]
 
-      (is (= new-raw-property (sut/get-property 1))))))
+      (is (= new-raw-property (sut/get-generic-property 1))))))
 
 
 (deftest test-create-property
@@ -124,7 +124,64 @@
                         :order 0}
 
           property
-          (sut/create-property! raw-property)]
+          (sut/create-generic-property! raw-property)]
 
       (is (= raw-property (dissoc property :id)))
       (is (int? (:id property))))))
+
+(deftest test-create-radio-options!
+
+  (tu/with-db
+    (let [property-id 8
+          value "Foo"
+          options [{:property-id property-id :value value}]]
+      (sut/create-radio-options! options)
+      (is (= 1 (tu/count! (str "FROM templatePropertiesRadioOptions WHERE propertyId = ?"
+                               " and VALUE = ?") property-id value))))))
+
+(deftest test-get-radio-options!
+
+  (tu/with-db
+    (let [data {:id 1 :propertyId 2 :value "Foo"}
+          _ (tu/insert! :templatePropertiesRadioOptions data)
+          [result & rest] (sut/get-radio-options {:id (:propertyId data)})]
+      (is (nil? rest))
+      (is (= (:id data) (:id result)))
+      (is (= (:propertyId data) (:property-id result)))
+      (is (= (:value data) (:value result))))))
+
+(deftest test-update-radio-options!
+
+  (tu/with-db
+    (let [old-opt1
+          (tu/gen-save! tu/template-section-property-radio-option
+                        {:id 1 :property-id 3 :value "Foo"})
+          
+          old-opt2
+          (tu/gen-save! tu/template-section-property-radio-option
+                        {:id 2 :property-id 3 :value "Bar"})
+
+          property
+          (tu/gen-save! tu/template-section-property
+                        {:value-type :templates.properties.types/radio
+                         :id 3})
+          
+          _
+          (assert (= (sut/get-radio-options property) [old-opt1 old-opt2]))
+
+          new-opt-data
+          {:property-id 3 :value "BAz"}
+
+          new-property
+          (assoc property :templates.properties.types.radio/options [new-opt-data])
+          
+          result
+          (sut/update-radio-options! new-property)
+          
+          [new-opt :as new-opts]
+          (sut/get-radio-options property)]
+
+      (is (nil? result))
+      (is (= 1 (count new-opts)))
+      (is (int? (:id new-opt)))
+      (is (= (select-keys new-opt [:property-id :value]) new-opt-data)))))

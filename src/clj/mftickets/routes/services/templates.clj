@@ -160,5 +160,5 @@
                                    :items [templates.data-spec/template]}}}}
      :post {:summary "Creates a template for a project"
             :parameters {:query {:project-id int?}
-                         :body templates.data-spec/create-template}
+                         :body templates.data-spec/template}
             :handler #'handle-creation-post}}]])
