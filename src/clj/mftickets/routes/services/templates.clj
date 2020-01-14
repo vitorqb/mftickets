@@ -11,7 +11,8 @@
             [mftickets.inject :refer [inject]]
             [mftickets.middleware.context :as middleware.context]
             [mftickets.middleware.pagination :as middleware.pagination]
-            [mftickets.routes.services.templates.data-spec :as templates.data-spec]
+            [mftickets.routes.services.templates.create.kw :as templates.create.kw]
+            [mftickets.routes.services.templates.update.kw :as templates.update.kw]
             [mftickets.routes.services.templates.validation.create
              :as
              templates.validation.create]
@@ -21,11 +22,21 @@
             [mftickets.validation.core :as validation]
             [spec-tools.data-spec :as ds]))
 
-;; Const
 (def err-msg-invalid-project-id "Invalid project-id!")
 (def invalid-project-id-response {:status 400 :body {:message err-msg-invalid-project-id}})
 
-;; Helpers
+;; Coercion
+(defmulti ^:private request-data->template
+  "Given a request data, extracts the template representation. Dispatches on value-type."
+  {:arglists '([req-data])}
+  :value-type)
+
+(defmethod request-data->template :default [req-data] req-data)
+
+(defmethod request-data->template :templates.properties.types/radio [req-data]
+  (clojure.set/rename-keys req-data {:options :templates.properties.types.radio/options}))
+
+;; Validation
 (defn- validate-template-update
   "Validates a new template sent by the user to update an old template.
   Returns either [error-key error-message] or :validation/success."
@@ -46,6 +57,7 @@
   ;; We don't currently validate anything
   :validation/success)
 
+;; Access
 (defn- user-has-access-to-template?
   "Does a user has access to a template?"
   [user template]
@@ -60,6 +72,7 @@
       (handler request)
       {:status 404})))
 
+;; Handlers and wrappers
 (defn- get-template
   "Get's a template from an id."
   [template-id]
@@ -100,24 +113,26 @@
 (defn handle-post
   [{old-template ::template {new-template :body} :parameters :as r}]
 
-  (validation/if-let-err [err (validate-template-update old-template new-template)]
-    (http.responses/validation-error err)
-    (do
-      (domain.templates/update-template! inject old-template new-template)
-      {:status 200 :body (get-template (:id new-template))})))
+  (let [new-template* (request-data->template new-template)]
+    (validation/if-let-err [err (validate-template-update old-template new-template*)]
+      (http.responses/validation-error err)
+      (do
+        (domain.templates/update-template! inject old-template new-template*)
+        {:status 200 :body (get-template (:id new-template*))}))))
 
 (defn handle-creation-post
   "Handlers a POST aiming at creating a new template."
   [{{new-template :body} :parameters}]
 
-  (validation/if-let-err [err (validate-new-template new-template)]
-    (http.responses/validation-error err)
-    {:status 200 :body (domain.templates/create-template! inject new-template)}))
+  (let [new-template* (request-data->template new-template)]
+    (validation/if-let-err [err (validate-new-template new-template*)]
+      (http.responses/validation-error err)
+      {:status 200 :body (domain.templates/create-template! inject new-template*)})))
 
 (defn handle-delete
   "Handler for deleting a template."
   [{template ::template}]
-
+  
   (validation/if-let-err [err (validate-template-delete template)]
     (http.responses/validation-error err)
     (do (domain.templates/delete-template! template)
@@ -136,10 +151,10 @@
      :get {:summary "Get a template."
            :parameters {:path {:id int?}}
            :handler #'handle-get
-           :responses {200 {:body templates.data-spec/template}}}
+           :responses {200 {:body ::templates.update.kw/template}}}
      :post {:summary "Post (edit) a template."
             :parameters {:path {:id int?}
-                         :body templates.data-spec/template}
+                         :body ::templates.update.kw/template}
             :handler #'handle-post}
      :delete {:summary "Deletes a template."
               :parameters {:path {:id int?}}
@@ -157,8 +172,8 @@
            :responses {200 {:body {:page-number int?
                                    :page-size int?
                                    :total-items-count int?
-                                   :items [templates.data-spec/template]}}}}
+                                   :items [::templates.update.kw/template]}}}}
      :post {:summary "Creates a template for a project"
             :parameters {:query {:project-id int?}
-                         :body templates.data-spec/template}
+                         :body ::templates.create.kw/template}
             :handler #'handle-creation-post}}]])
