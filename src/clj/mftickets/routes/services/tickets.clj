@@ -49,6 +49,7 @@
     {:post {:summary
             "Creates a ticket"
 
+            ;; !!!! TODO -> Proper checkixong
             :parameters
             {:body {(ds/opt :id) nil?
                     :template-id int?
